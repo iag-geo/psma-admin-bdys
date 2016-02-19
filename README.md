@@ -8,7 +8,10 @@ Trims the boundaries to the coastline; fixes state border overlaps and gaps; and
 
 ### I Just Want the Data!
 
-Ok, here it is: 
+You can run this script to get the result or just download it from here:
+
+
+TO DO : ADD URL FROM IAG S3 BUCKET
 
 
 ### Pre-requisites
@@ -23,7 +26,7 @@ Trimming the boundaries to the coastline requires a small number of bay or estua
 
 These localities are:
 
-| locality_pid | name | postcode | state | no. of addresses | no. of streets |
+| locality_pid | name | postcode | state | addresses | streets |
 | ------------- | ------------- | ------------- | ------------- | -------------: | -------------: |
 | NSW524 | BOTANY BAY | 2019 | NSW | 1 | 12 | 
 | NSW2046 | JERVIS BAY |  | NSW | 0 | 5 | 
