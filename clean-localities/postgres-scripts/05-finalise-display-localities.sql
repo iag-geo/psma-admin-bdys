@@ -20,7 +20,7 @@ ANALYZE admin_bdys.temp_holes_distinct;
 -- update locality/state border holes with locality PIDs when there is only one locality touching it (in the same state)
 
 -- -- reset 
-DELETE FROM admin_bdys.temp_split_localities WHERE match_type IN ('GOOD BORDER', 'MESSY BORDER');
+-- DELETE FROM admin_bdys.temp_split_localities WHERE match_type IN ('GOOD BORDER', 'MESSY BORDER');
 -- UPDATE admin_bdys.temp_holes_distinct SET locality_pid = NULL;
 
 DROP TABLE IF EXISTS admin_bdys.temp_hole_localities; -- 1 min -- 16799 
@@ -353,8 +353,8 @@ select * from admin_bdys.locality_boundaries_display where NOT ST_IsValid(geom);
 
 -- select * from admin_bdys.locality_boundaries_display where ST_IsEmpty(geom); -- 0
  
--- -- QA - What's been lost?
--- SELECT *
+-- -- QA - What's been lost? (add to GitHub readme.md each quarter
+-- SELECT '| ' || loc.locality_pid || ' | ' || loc.locality_name || ' | ' || COALESCE(loc.postcode,'') || ' | ' || loc.state || ' | ' || loc.address_count || ' | ' || loc.street_count || ' |'
 --   FROM admin_bdys.locality_boundaries AS loc
 --   LEFT OUTER JOIN admin_bdys.locality_boundaries_display AS bdy
 --   ON loc.locality_pid = bdy.locality_pid
@@ -362,16 +362,4 @@ select * from admin_bdys.locality_boundaries_display where NOT ST_IsValid(geom);
 --   ORDER BY loc.state,
 --            loc.locality_name,
 --            loc.postcode;
-
--- -- 'NSW524','BOTANY BAY','2019','NSW','GAZETTED LOCALITY',1,12
--- -- 'NSW2046','JERVIS BAY','<NULL>','NSW','GAZETTED LOCALITY',0,5
--- -- 'NSW2275','LAKE MACQUARIE','<NULL>','NSW','GAZETTED LOCALITY',1,67
--- -- 'NSW2627','MIDDLE HARBOUR','2087','NSW','GAZETTED LOCALITY',3,22
--- -- 'NSW3019','NORTH HARBOUR','<NULL>','NSW','GAZETTED LOCALITY',0,11
--- -- 'NSW3255','PITTWATER','2108','NSW','GAZETTED LOCALITY',5,31
--- -- 'NT26','BEAGLE GULF','<NULL>','NT','GAZETTED LOCALITY',0,0
--- -- 'NT75','DARWIN HARBOUR','<NULL>','NT','GAZETTED LOCALITY',0,0
--- -- 'QLD1351','HERVEY BAY','<NULL>','QLD','GAZETTED LOCALITY',0,2
-
- 
 

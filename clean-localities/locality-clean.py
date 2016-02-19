@@ -96,11 +96,11 @@ def main():
     pg_cur.execute(open_sql_file("create-multi-linestring-split-function.sql"))
 
     # let's build some clean localities!
-    # create_states_and_prep_localities()
-    # get_split_localities(pg_cur)
-    # verify_locality_polygons(pg_cur)
-    # get_locality_state_border_gaps(pg_cur)
-    # finalise_display_localities(pg_cur)
+    create_states_and_prep_localities()
+    get_split_localities(pg_cur)
+    verify_locality_polygons(pg_cur)
+    get_locality_state_border_gaps(pg_cur)
+    finalise_display_localities(pg_cur)
     export_display_localities()
 
     pg_cur.close()
@@ -149,6 +149,8 @@ def finalise_display_localities(pg_cur):
 def export_display_localities():
     start_time = datetime.now()
 
+    sql = open_sql_file("06-export-display-localities.sql")
+
     if platform.system() == "Windows":
         password_str = "SET"
     else:
@@ -156,8 +158,8 @@ def export_display_localities():
 
     password_str += " PGPASSWORD={0}&&".format(pg_password)
 
-    cmd = password_str + "pgsql2shp -f {0} -u {1} -h {2} -p {3} {4} {5}.locality_boundaries_display"\
-        .format(shapefile_export_path, pg_user, pg_host, pg_port, pg_db, admin_bdys_schema)
+    cmd = password_str + "pgsql2shp -f \"{0}\" -u {1} -h {2} -p {3} {4} \"{5}\""\
+        .format(shapefile_export_path, pg_user, pg_host, pg_port, pg_db, sql)
 
     # print cmd
     run_command_line(cmd)
