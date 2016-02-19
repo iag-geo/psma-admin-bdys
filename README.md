@@ -4,7 +4,12 @@ Some utils to make it easier to use the PSMA's Administrative Boundaries
 ## clean-localities
 A Python script for creating a clean version of the Suburb-Locality boundaries for presentation or visualisation.
 
-It trims the boundaries to the coastline; fixes state border overlaps and gaps; and thins the boundaries for improved display performance on both desktop and in browser.
+Trims the boundaries to the coastline; fixes state border overlaps and gaps; and thins the boundaries for faster display performance in desktop GIS tools and in browsers.
+
+### I Just Want the Data!
+
+Ok, here it is: 
+
 
 ### Pre-requisites
 
