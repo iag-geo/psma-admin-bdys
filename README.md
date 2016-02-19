@@ -19,9 +19,9 @@ Ok, here it is:
 - Python 2.7.x with Psycopg2 2.6.x
 
 ### Missing localities
-Trimming the boundaries to the coastline comes at the cost of losing a small number of bay or estuary based localities (that have very few 'addresses')
+Trimming the boundaries to the coastline requires a small number of bay or estuary based localities (that have very few 'addresses') to be removed.
 
-The missing localities are:
+These localities are:
 
 | locality_pid | name | postcode | state | no. of addresses | no. of streets |
 | ------------- | ------------- | ------------- | ------------- | -------------: | -------------: |
