@@ -15,9 +15,9 @@ Ok, here it is:
 
 - You will need to have either: run the gnaf-loader script; or loaded the gnaf-loader admin-bdys schema and data into Postgres (see https://github.com/minus34/gnaf-loader)
 - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 on OSX)
-- PostGIS 2.x
+- PostGIS 2.1+ 
 - Python 2.7.x with Psycopg2 2.6.x
 
 ### Missing localities
-Trimming the boundaries to the coastline comes at the costs of a small number of bay or estuary based localities, these are:
+Trimming the boundaries to the coastline comes at the cost of a small number of bay or estuary based localities (with very few 'addresses'), these are:
 
