@@ -23,8 +23,8 @@ Trimming the boundaries to the coastline comes at the cost of losing a small num
 
 The missing localities are:
 
-| locality_pid | name | postcode | state | address count | street count |
-| ------------- | ------------- | ------------- | ------------- | ------------- | -------------: |
+| locality_pid | name | postcode | state | no. of addresses | no. of streets |
+| ------------- | ------------- | ------------- | ------------- | -------------: | -------------: |
 | NSW524 | BOTANY BAY | 2019 | NSW | 1 | 12 | 
 | NSW2046 | JERVIS BAY |  | NSW | 0 | 5 | 
 | NSW2275 | LAKE MACQUARIE |  | NSW | 1 | 67 | 
