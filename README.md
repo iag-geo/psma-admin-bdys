@@ -19,10 +19,12 @@ Ok, here it is:
 - Python 2.7.x with Psycopg2 2.6.x
 
 ### Missing localities
-Trimming the boundaries to the coastline comes at the cost of a small number of bay or estuary based localities (with very few 'addresses'), these are:
+Trimming the boundaries to the coastline comes at the cost of losing a small number of bay or estuary based localities (that have very few 'addresses')
+
+The missing localities are:
 
 | locality_pid | name | postcode | state | address count | street count |
-| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
+| ------------- | ------------- | ------------- | ------------- | ------------- | -------------: |
 | NSW524 | BOTANY BAY | 2019 | NSW | 1 | 12 | 
 | NSW2046 | JERVIS BAY |  | NSW | 0 | 5 | 
 | NSW2275 | LAKE MACQUARIE |  | NSW | 1 | 67 | 
@@ -31,4 +33,4 @@ Trimming the boundaries to the coastline comes at the cost of a small number of 
 | NSW3255 | PITTWATER | 2108 | NSW | 5 | 31 | 
 | NT26 | BEAGLE GULF |  | NT | 0 | 0 | 
 | NT75 | DARWIN HARBOUR |  | NT | 0 | 0 | 
-| QLD1351 | HERVEY BAY |  | QLD | 0 | 2 | 
+| QLD1351 | HERVEY BAY |  | QLD | 0 | 2 |
