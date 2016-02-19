@@ -18,7 +18,7 @@
 #
 # Pre-requisites
 #
-# - Either: run the gnaf-loader Python script; or load the gnaf-loader admin-bdys schema and data into Postgres
+# - Either: run the gnaf-loader Python script (takes 30-60 mins); or load the gnaf-loader admin-bdys schema and data into Postgres
 #     (see https://github.com/minus34/gnaf-loader)
 # - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 on OSX)
 # - PostGIS 2.x
@@ -165,6 +165,7 @@ def export_display_localities():
     run_command_line(cmd)
 
     print "\t- Step 6 of 6 : display localities exported to SHP : {0}".format(datetime.now() - start_time)
+    print "\t- IMPORTANT - if this last step took < 1 second, it may have failed silently. Check your output directory!"
 
 
 # takes a list of sql queries or command lines and runs them using multiprocessing
@@ -264,7 +265,7 @@ def split_sql_into_list_and_process(pg_cur, the_sql, table_schema, table_name, t
     for i in range(0, processes):
         end_pkey = start_pkey + rows_per_request
 
-        where_clause = " WHERE {0}.{3} > {1} AND {0}.{3} <= {2}"
+        where_clause = " WHERE {0}.{3} > {1} AND {0}.{3} <= {2}".format(table_alias, start_pkey, end_pkey, table_gid)
 
         if "WHERE " in the_sql:
             mp_sql = the_sql.replace(" WHERE ", where_clause + " AND ")
