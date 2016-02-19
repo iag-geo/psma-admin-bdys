@@ -46,7 +46,7 @@ from datetime import datetime
 
 # what's the maximum parallel processes you want to use for the data load?
 # (set it to the number of cores on the Postgres server minus 2, limit to 12 if 16+ cores - minimal benefit beyond 12)
-max_concurrent_processes = 24
+max_concurrent_processes = 6
 
 # Postgres parameters
 
@@ -57,9 +57,7 @@ pg_user = "postgres"
 pg_password = "password"
 
 # schema names for the raw gnaf, flattened reference and admin boundary tables
-raw_gnaf_schema = "raw_gnaf"
 raw_admin_bdys_schema = "raw_admin_bdys"
-gnaf_schema = "gnaf"
 admin_bdys_schema = "admin_bdys"
 
 # *********************************************************************************************************************
@@ -74,9 +72,9 @@ pg_connect_string = "dbname='{0}' host='{1}' port='{2}' user='{3}' password='{4}
 
 # set postgres script directory
 if platform.system() == "Windows":
-    sql_dir = os.path.dirname(os.path.realpath(__file__)) + "\\postgres-scripts\\clean-localities\\"
+    sql_dir = os.path.dirname(os.path.realpath(__file__)) + "\\postgres-scripts\\"
 else:  # assume all else use forward slashes
-    sql_dir = os.path.dirname(os.path.realpath(__file__)) + "/postgres-scripts/clean-localities/"
+    sql_dir = os.path.dirname(os.path.realpath(__file__)) + "/postgres-scripts/"
 
 
 def main():
@@ -185,10 +183,6 @@ def run_sql_multiprocessing(sql):
     pg_conn.autocommit = True
     pg_cur = pg_conn.cursor()
 
-    # set raw gnaf database schema (it's needed for the primary and foreign key creation)
-    if raw_gnaf_schema != "public":
-        pg_cur.execute("SET search_path = {0}, public, pg_catalog".format(raw_gnaf_schema,))
-
     try:
         pg_cur.execute(sql)
     except psycopg2.Error, e:
@@ -226,10 +220,6 @@ def prep_sql_list(sql_list):
 
 # change schema names in the SQL script if not the default
 def prep_sql(sql):
-    if raw_gnaf_schema != "raw_gnaf":
-        sql = sql.replace(" raw_gnaf.", " {0}.".format(raw_gnaf_schema,))
-    if gnaf_schema != "gnaf":
-        sql = sql.replace(" gnaf.", " {0}.".format(gnaf_schema,))
     if raw_admin_bdys_schema != "raw_admin_bdys":
         sql = sql.replace(" raw_admin_bdys.", " {0}.".format(raw_admin_bdys_schema,))
     if admin_bdys_schema != "admin_bdys":
