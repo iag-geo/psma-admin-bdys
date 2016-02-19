@@ -248,20 +248,13 @@ SELECT 900000000 + gid,
   WHERE locality_pid IS NOT NULL;
 
 
-
-
-
-
 -- update locality polygons that have a manual fix point on them -- 159
+
 UPDATE admin_bdys.temp_split_localities AS loc
   SET match_type = 'MANUAL'
   FROM admin_bdys.temp_messy_centroids AS pnt
   WHERE (ST_Within(pnt.geom, loc.geom) OR loc.locality_pid = 'ACT912')
   AND loc.match_type = 'SPLIT';
-
-
-
-
 
 
 --merge the results into a single table

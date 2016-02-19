@@ -8,7 +8,7 @@ It trims the boundaries to the coastline; fixes state border overlaps and gaps; 
 
 ### Pre-requisites
 
-- You will need to have either: run the gnaf-loader script; or loaded the gnaf-loader admin-bdys schema and data into Postgres
+- You will need to have either: run the gnaf-loader script; or loaded the gnaf-loader admin-bdys schema and data into Postgres (see https://github.com/minus34/gnaf-loader)
 - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 on OSX)
 - PostGIS 2.x
 - Python 2.7.x with Psycopg2 2.6.x

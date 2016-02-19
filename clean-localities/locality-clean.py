@@ -1,33 +1,32 @@
 # *********************************************************************************************************************
-# load.gnaf.py
+# locality-clean.py
 # *********************************************************************************************************************
 #
-# A script for loading raw GNAF & PSMA Admin boundaries and creating flattened, complete, easy to use versions of them
+# Takes the already processed locality_boundaries from the gnaf-loader (see https://github.com/minus34/gnaf-loader) and
+# prepares them for presentation and visualisation, by doing the following:
+#   1. Trims the localities to the coastline;
+#   2. Cleans the overlaps and gaps at each state border;
+#   3. Thins the polygons to for faster display in both desktop GIS tolls and in browsers; and
+#   4. Exports the result to a Shapefile
 #
-# Author: Hugh Saalmans
-# GitHub: minus34
-# Twitter: @minus34
+# Author: Hugh Saalmans, Location Science Manager
+# Organisation: IAG
+# GitHub: iag-geo
 #
-# Version: 1.0.0
+# Version: 0.9
 # Date: 22-02-2016
 #
-# Process:
-#   1. Loads raw GNAF into Postgres from PSV files using COPY
-#   2. Loads raw PSMA Admin Boundaries from Shapefiles into Postgres using shp2pgsql (part of PostGIS)
-#   3. Creates flattened and simplified GNAF tables containing all relevant data
-#   4. Creates a ready to use Locality Boundaries table containing a number of fixes to overcome known data issues
-#   5. Splits the locality boundary for Melbourne into 2, one for each of its postcodes (3000 & 3004)
-#   6. Creates final principal & alias address tables containing fixes based on the above locality customisations
-#   7. Creates an almost correct Postcode Boundary table from locality boundary aggregates with address based postcodes
-#   8. Adds primary and foreign keys to check for PID integrity across the reference tables
+# Pre-requisites
+#
+# - Either: run the gnaf-loader Python script; or load the gnaf-loader admin-bdys schema and data into Postgres
+#     (see https://github.com/minus34/gnaf-loader)
+# - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 on OSX)
+# - PostGIS 2.x
+# - Python 2.7.x with Psycopg2 2.6.x
 #
 # TO DO:
-# - create clean, web ready locality bdys
-# - create ready-to-use versions of all admin bdys
-# - boundary tag addresses for census bdys
-# - boundary tag addresses for admin bdys
-# - output reference tables to PSV & SHP
-# - check address_alias_lookup record count
+# - Refactor the scrips in the 05-finalise-display-localities.sql file
+# - Create postcode boundaries by aggregating the final localities by their postcode (derived from raw GNAF)
 #
 # *********************************************************************************************************************
 
@@ -44,21 +43,23 @@ from datetime import datetime
 # Edit these parameters to taste - START
 # *********************************************************************************************************************
 
-# what's the maximum parallel processes you want to use for the data load?
+# what are the maximum parallel processes you want to use for the data load?
 # (set it to the number of cores on the Postgres server minus 2, limit to 12 if 16+ cores - minimal benefit beyond 12)
 max_concurrent_processes = 6
 
 # Postgres parameters
-
 pg_host = "localhost"
 pg_port = 5433
 pg_db = "gnaf_test"
 pg_user = "postgres"
 pg_password = "password"
 
-# schema names for the raw gnaf, flattened reference and admin boundary tables
+# schema names for the raw and processed admin boundary tables
 raw_admin_bdys_schema = "raw_admin_bdys"
 admin_bdys_schema = "admin_bdys"
+
+# full path and file name to export the resulting Shapefile to
+shapefile_export_path = r"C:\temp\psma_201511\locality_boundaries_display.shp"
 
 # *********************************************************************************************************************
 # Edit these parameters to taste - END
@@ -68,12 +69,10 @@ admin_bdys_schema = "admin_bdys"
 pg_connect_string = "dbname='{0}' host='{1}' port='{2}' user='{3}' password='{4}'"\
     .format(pg_db, pg_host, pg_port, pg_user, pg_password)
 
-# application_name ?
-
 # set postgres script directory
 if platform.system() == "Windows":
     sql_dir = os.path.dirname(os.path.realpath(__file__)) + "\\postgres-scripts\\"
-else:  # assume all else use forward slashes
+else:  # assume all other OS' use forward slashes
     sql_dir = os.path.dirname(os.path.realpath(__file__)) + "/postgres-scripts/"
 
 
@@ -93,14 +92,16 @@ def main():
         return False
 
     # add Postgres functions to clean out non-polygon geometries from GeometryCollections
-    pg_cur.execute(open_sql_file("00-create-polygon-intersection-function.sql"))
-    pg_cur.execute(open_sql_file("00-create-multi-linestring-split-function.sql"))
+    pg_cur.execute(open_sql_file("create-polygon-intersection-function.sql"))
+    pg_cur.execute(open_sql_file("create-multi-linestring-split-function.sql"))
 
+    # let's build some clean localities!
     create_states_and_prep_localities()
     get_split_localities(pg_cur)
     verify_locality_polygons(pg_cur)
     get_locality_state_border_gaps(pg_cur)
-    # finalise_display_localities(pg_cur)
+    finalise_display_localities(pg_cur)
+    export_display_localities()
 
     pg_cur.close()
     pg_conn.close()
@@ -110,54 +111,56 @@ def main():
 
 def create_states_and_prep_localities():
     start_time = datetime.now()
-    sql_list = [open_sql_file("01-create-states-from-sa4s.sql"), open_sql_file("02-thin-locality-boundaries.sql")]
+    sql_list = [open_sql_file("01a-create-states-from-sa4s.sql"), open_sql_file("01b-thin-locality-boundaries.sql")]
     multiprocess_list(2, "sql", sql_list)
-    print "\t- Step  1 of 10 : state table created & localities prepped : {0}".format(datetime.now() - start_time)
+    print "\t- Step 1 of 10 : state table created & localities prepped : {0}".format(datetime.now() - start_time)
 
 
+# split locality bdys by state bdys, using multiprocessing
 def get_split_localities(pg_cur):
     start_time = datetime.now()
-
-    # split locality bdys by state bdys, using multiprocessing
-    sql = prep_sql("INSERT INTO admin_bdys.temp_split_localities "
-                   "(gid, locality_pid, loc_state, state_gid, ste_state, match_type, geom) "
-                   "SELECT loc.gid, loc.locality_pid, loc.state, ste.gid, ste.state, 'SPLIT', "
-                   "(ST_Dump(PolygonalIntersection(loc.geom, ste.geom))).geom "
-                   "FROM admin_bdys.temp_localities AS loc "
-                   "INNER JOIN admin_bdys.temp_sa4_state_lines AS lne ON ST_Intersects(loc.geom, lne.geom)"
-                   "INNER JOIN admin_bdys.temp_sa4_states AS ste ON lne.gid = ste.gid;")
+    sql = open_sql_file("02-split-localities-by-state-borders.sql")
     split_sql_into_list_and_process(pg_cur, sql, admin_bdys_schema, "temp_localities", "loc", "gid")
-
-    print "\t- Step  2 of 10 : localities split by state : {0}".format(datetime.now() - start_time)
+    print "\t- Step 2 of 6 : localities split by state : {0}".format(datetime.now() - start_time)
 
 
 def verify_locality_polygons(pg_cur):
     start_time = datetime.now()
-    pg_cur.execute(open_sql_file("03-verify-split-polygons.sql"))
-    pg_cur.execute(open_sql_file("04-load-messy-centroids.sql"))
-    print "\t- Step  3 of 10 : messy locality polygons verified : {0}".format(datetime.now() - start_time)
+    pg_cur.execute(open_sql_file("03a-verify-split-polygons.sql"))
+    pg_cur.execute(open_sql_file("03b-load-messy-centroids.sql"))
+    print "\t- Step 3 of 6 : messy locality polygons verified : {0}".format(datetime.now() - start_time)
 
 
+# get holes in the localities along the state borders, using multiprocessing (doesn't help much - too few states!)
 def get_locality_state_border_gaps(pg_cur):
     start_time = datetime.now()
-
-    # get holes in the localities along the state borders
-    sql = prep_sql("INSERT INTO admin_bdys.temp_holes (state, geom) "
-                   "SELECT ste.state, (ST_Dump(ST_Difference(ste.geom, ST_Union(loc.geom)))).geom "
-                   "FROM admin_bdys.temp_sa4_state_borders AS ste "
-                   "INNER JOIN admin_bdys.temp_split_localities AS loc "
-                   "ON (ST_Overlaps(ste.geom, loc.geom) AND ste.state = loc.loc_state) "
-                   "GROUP BY ste.state, ste.geom;")
+    sql = open_sql_file("04-create-holes-along-borders.sql")
     split_sql_into_list_and_process(pg_cur, sql, admin_bdys_schema, "temp_sa4_state_borders", "ste", "gid")
-
-    print "\t- Step  4 of 10 : locality holes created : {0}".format(datetime.now() - start_time)
+    print "\t- Step 4 of 6 : locality holes created : {0}".format(datetime.now() - start_time)
 
 
 def finalise_display_localities(pg_cur):
     start_time = datetime.now()
     pg_cur.execute(open_sql_file("05-finalise-display-localities.sql"))
     pg_cur.execute(prep_sql("VACUUM ANALYSE admin_bdys.locality_boundaries_display;"))
-    print "\t- Step  5 of 10 : display localities finalised : {0}".format(datetime.now() - start_time)
+    print "\t- Step 5 of 6 : display localities finalised : {0}".format(datetime.now() - start_time)
+
+
+def export_display_localities():
+    start_time = datetime.now()
+
+    if platform.system() == "Windows":
+        password_str = "SET"
+    else:
+        password_str = "export"
+
+    password_str += " PGPASSWORD={0}&&".format(pg_password)
+
+    cmd = password_str + "pgsql2shp -f {0} -U {1} -h {2} -p {3} {4} {5}.locality_boundaries_display"\
+        .format(shapefile_export_path, pg_user, pg_host, pg_port, pg_db, admin_bdys_schema)
+    run_command_line(cmd)
+
+    print "\t- Step 6 of 6 : display localities exported to SHP : {0}".format(datetime.now() - start_time)
 
 
 # takes a list of sql queries or command lines and runs them using multiprocessing
@@ -210,12 +213,12 @@ def open_sql_file(file_name):
     return prep_sql(sql)
 
 
-# change schema names in an array of SQL script if schemas not the default
-def prep_sql_list(sql_list):
-    output_list = []
-    for sql in sql_list:
-        output_list.append(prep_sql(sql))
-    return output_list
+# # change schema names in an array of SQL script if schemas not the default
+# def prep_sql_list(sql_list):
+#     output_list = []
+#     for sql in sql_list:
+#         output_list.append(prep_sql(sql))
+#     return output_list
 
 
 # change schema names in the SQL script if not the default
@@ -257,18 +260,16 @@ def split_sql_into_list_and_process(pg_cur, the_sql, table_schema, table_name, t
     for i in range(0, processes):
         end_pkey = start_pkey + rows_per_request
 
+        where_clause = " WHERE {0}.{3} > {1} AND {0}.{3} <= {2}"
+
         if "WHERE " in the_sql:
-            mp_sql = the_sql.replace("WHERE ", "WHERE {0}.{3} > {1} AND {0}.{3} <= {2} AND ")\
-                .format(table_alias, start_pkey, end_pkey, table_gid)
+            mp_sql = the_sql.replace(" WHERE ", where_clause + " AND ")
         elif "GROUP BY " in the_sql:
-            mp_sql = the_sql.replace("GROUP BY ", "WHERE {0}.{3} > {1} AND {0}.{3} <= {2} GROUP BY ")\
-                .format(table_alias, start_pkey, end_pkey, table_gid)
+            mp_sql = the_sql.replace("GROUP BY ", where_clause + " GROUP BY ")
         elif "ORDER BY " in the_sql:
-            mp_sql = the_sql.replace("ORDER BY ", "WHERE {0}.{3} > {1} AND {0}.{3} <= {2} ORDER BY ")\
-                .format(table_alias, start_pkey, end_pkey, table_gid)
+            mp_sql = the_sql.replace("ORDER BY ", where_clause + " ORDER BY ")
         else:
-            mp_sql = the_sql.replace(";", " WHERE {0}.{3} > {1} AND {0}.{3} <= {2};")\
-                .format(table_alias, start_pkey, end_pkey, table_gid)
+            mp_sql = the_sql.replace(";", where_clause + ";")
 
         sql_list.append(mp_sql)
         start_pkey = end_pkey
