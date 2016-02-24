@@ -1,7 +1,7 @@
 # psma-admin-bdys
 Some utils to make it easier to use the PSMA's Administrative Boundaries
 
-## clean-localities
+## locality-clean
 A Python script for creating a clean version of the Suburb-Locality boundaries for presentation or visualisation.
 
 Trims the boundaries to the coastline; fixes state border overlaps and gaps; and thins the boundaries for faster display performance in desktop GIS tools and in browsers.

@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.ST_SplitPolygon(gid integer, poly geometry, blades geometry)
+CREATE OR REPLACE FUNCTION public.ST_SplitPolygon(gid integer, poly geometry(Polygon), blades geometry(MultiLineString))
   RETURNS geometry AS
   
 $BODY$DECLARE
@@ -21,7 +21,7 @@ BEGIN
 
   SELECT ST_NumGeometries(output_polys) INTO num_polys;
   IF num_polys < num_lines + 1 THEN
-    RAISE NOTICE 'NOT ENOUGH POLYGONS! : gid % : blades % : num output polys %', gid, num_lines, num_polys;
+    RAISE NOTICE 'NOT ENOUGH POLYGONS! : id % : blades % : num output polys %', gid, num_lines, num_polys;
   END IF;
 
   RETURN output_polys;
