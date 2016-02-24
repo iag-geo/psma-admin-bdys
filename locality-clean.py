@@ -4,29 +4,34 @@
 #
 # Takes the already processed locality_boundaries from the gnaf-loader (see https://github.com/minus34/gnaf-loader) and
 # prepares them for presentation and visualisation, by doing the following:
-#   1. Trims the localities to the coastline;
-#   2. Cleans the overlaps and gaps at each state border;
-#   3. Thins the polygons to for faster display in both desktop GIS tolls and in browsers; and
-#   4. Exports the result to a Shapefile
+#  1. Trims the localities to the coastline;
+#  2. Cleans the overlaps and gaps at each state border;
+#  3. Thins the polygons to for faster display in both desktop GIS tolls and in browsers; and
+#  4. Exports the result to a Shapefile
 #
-# Author: Hugh Saalmans, Location Science Manager
 # Organisation: IAG
+# Author: Hugh Saalmans, Location Science Manager
 # GitHub: iag-geo
 #
 # Version: 0.9
 # Date: 22-02-2016
 #
-# Pre-requisites
+# Copyright:
+#  - Code is copyright IAG - licensed under an Apache License, version 2.0
+#  - Data is copyright PSMA - licensed under a Creative Commons (By Attribution) license
 #
-# - Either: run the gnaf-loader Python script (takes 30-60 mins); or load the gnaf-loader admin-bdys schema and data into Postgres
-#     (see https://github.com/minus34/gnaf-loader)
-# - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 on OSX)
-# - PostGIS 2.x
-# - Python 2.7.x with Psycopg2 2.6.x
+# Pre-requisites
+#  - Either: run the gnaf-loader Python script (30-60 mins); or load the gnaf-loader admin-bdys schema into Postgres
+#      (see https://github.com/minus34/gnaf-loader)
+#  - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 on OSX)
+#  - PostGIS 2.x
+#  - Python 2.7.x with Psycopg2 2.6.x
 #
 # TO DO:
-# - Refactor the scrips in the 05-finalise-display-localities.sql file
-# - Create postcode boundaries by aggregating the final localities by their postcode (derived from raw GNAF)
+#  - Refactor the scripts in the 05-finalise-display-localities.sql file
+#  - Create postcode boundaries by aggregating the final localities by their postcode (derived from raw GNAF)
+#  - Add a QA section to confirm to invalid geometries in final table and list the missing water based localities
+#  - Drop all the temporary tables created in the process
 #
 # *********************************************************************************************************************
 
@@ -45,21 +50,21 @@ from datetime import datetime
 
 # what are the maximum parallel processes you want to use for the data load?
 # (set it to the number of cores on the Postgres server minus 2, limit to 12 if 16+ cores - minimal benefit beyond 12)
-max_concurrent_processes = 6
+max_concurrent_processes = 4
 
-# Postgres parameters
-pg_host = "localhost"
-pg_port = 5433
-pg_db = "gnaf_test"
-pg_user = "postgres"
-pg_password = "password"
+# Postgres parameters. These will also respect the standard PGHOST/PGPORT/etc environment variables if set.
+pg_host = os.getenv("PGHOST", "localhost")
+pg_port = os.getenv("PGPORT", 5434)
+pg_db = os.getenv("PGDATABASE", "psma_201602")
+pg_user = os.getenv("PGUSER", "postgres")
+pg_password = os.getenv("PGPASSWORD", "password")
 
 # schema names for the raw and processed admin boundary tables
 raw_admin_bdys_schema = "raw_admin_bdys"
 admin_bdys_schema = "admin_bdys"
 
 # full path and file name to export the resulting Shapefile to
-shapefile_export_path = r"C:\temp\psma_201511\locality_boundaries_display.shp"
+shapefile_export_path = r"C:\temp\psma_201602\locality_bdys_display.shp"
 
 # *********************************************************************************************************************
 # Edit these parameters to taste - END
@@ -70,10 +75,7 @@ pg_connect_string = "dbname='{0}' host='{1}' port='{2}' user='{3}' password='{4}
     .format(pg_db, pg_host, pg_port, pg_user, pg_password)
 
 # set postgres script directory
-if platform.system() == "Windows":
-    sql_dir = os.path.dirname(os.path.realpath(__file__)) + "\\postgres-scripts\\"
-else:  # assume all other OS' use forward slashes
-    sql_dir = os.path.dirname(os.path.realpath(__file__)) + "/postgres-scripts/"
+sql_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "postgres-scripts")
 
 
 def main():
@@ -102,6 +104,7 @@ def main():
     get_locality_state_border_gaps(pg_cur)
     finalise_display_localities(pg_cur)
     export_display_localities()
+    # qa_display_localities()
 
     pg_cur.close()
     pg_conn.close()
@@ -111,9 +114,9 @@ def main():
 
 def create_states_and_prep_localities():
     start_time = datetime.now()
-    sql_list = [open_sql_file("01a-create-states-from-sa4s.sql"), open_sql_file("01b-thin-locality-boundaries.sql")]
+    sql_list = [open_sql_file("01a-create-states-from-sa4s.sql"), open_sql_file("01b-prep-locality-boundaries.sql")]
     multiprocess_list(2, "sql", sql_list)
-    print "\t- Step 1 of 10 : state table created & localities prepped : {0}".format(datetime.now() - start_time)
+    print "\t- Step 1 of 7 : state table created & localities prepped : {0}".format(datetime.now() - start_time)
 
 
 # split locality bdys by state bdys, using multiprocessing
@@ -121,29 +124,28 @@ def get_split_localities(pg_cur):
     start_time = datetime.now()
     sql = open_sql_file("02-split-localities-by-state-borders.sql")
     split_sql_into_list_and_process(pg_cur, sql, admin_bdys_schema, "temp_localities", "loc", "gid")
-    print "\t- Step 2 of 6 : localities split by state : {0}".format(datetime.now() - start_time)
+    print "\t- Step 2 of 7 : localities split by state : {0}".format(datetime.now() - start_time)
 
 
 def verify_locality_polygons(pg_cur):
     start_time = datetime.now()
     pg_cur.execute(open_sql_file("03a-verify-split-polygons.sql"))
     pg_cur.execute(open_sql_file("03b-load-messy-centroids.sql"))
-    print "\t- Step 3 of 6 : messy locality polygons verified : {0}".format(datetime.now() - start_time)
+    print "\t- Step 3 of 7 : messy locality polygons verified : {0}".format(datetime.now() - start_time)
 
 
 # get holes in the localities along the state borders, using multiprocessing (doesn't help much - too few states!)
 def get_locality_state_border_gaps(pg_cur):
     start_time = datetime.now()
     sql = open_sql_file("04-create-holes-along-borders.sql")
-    split_sql_into_list_and_process(pg_cur, sql, admin_bdys_schema, "temp_sa4_state_borders", "ste", "gid")
-    print "\t- Step 4 of 6 : locality holes created : {0}".format(datetime.now() - start_time)
+    split_sql_into_list_and_process(pg_cur, sql, admin_bdys_schema, "temp_state_border_buffers", "ste", "gid")
+    print "\t- Step 4 of 7 : locality holes created : {0}".format(datetime.now() - start_time)
 
 
 def finalise_display_localities(pg_cur):
     start_time = datetime.now()
     pg_cur.execute(open_sql_file("05-finalise-display-localities.sql"))
-    pg_cur.execute(prep_sql("VACUUM ANALYSE admin_bdys.locality_boundaries_display;"))
-    print "\t- Step 5 of 6 : display localities finalised : {0}".format(datetime.now() - start_time)
+    print "\t- Step 5 of 7 : display localities finalised : {0}".format(datetime.now() - start_time)
 
 
 def export_display_localities():
@@ -164,8 +166,19 @@ def export_display_localities():
     # print cmd
     run_command_line(cmd)
 
-    print "\t- Step 6 of 6 : display localities exported to SHP : {0}".format(datetime.now() - start_time)
-    print "\t- IMPORTANT - if this last step took < 1 second, it may have failed silently. Check your output directory!"
+    print "\t- Step 6 of 7 : display localities exported to SHP : {0}".format(datetime.now() - start_time)
+    print "\t\t- IMPORTANT - if this step took < 1 second - it may have failed silently. Check your output directory!"
+
+
+def qa_display_localities(pg_cur):
+    start_time = datetime.now()
+    pg_cur.execute(prep_sql("select * from admin_bdys.localities_display where NOT ST_IsValid(geom);"))
+
+    pg_cur.execute(prep_sql("select * from admin_bdys.localities_display where NOT ST_IsEmpty(geom);"))
+
+    pg_cur.execute(open_sql_file("07-qa-display-localities.sql"))
+
+    print "\t- Step 7 of 7 : display localities qa'd : {0}".format(datetime.now() - start_time)
 
 
 # takes a list of sql queries or command lines and runs them using multiprocessing
