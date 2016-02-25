@@ -50,11 +50,11 @@ from datetime import datetime
 
 # what are the maximum parallel processes you want to use for the data load?
 # (set it to the number of cores on the Postgres server minus 2, limit to 12 if 16+ cores - minimal benefit beyond 12)
-max_concurrent_processes = 4
+max_concurrent_processes = 6
 
 # Postgres parameters. These will also respect the standard PGHOST/PGPORT/etc environment variables if set.
 pg_host = os.getenv("PGHOST", "localhost")
-pg_port = os.getenv("PGPORT", 5434)
+pg_port = os.getenv("PGPORT", 5432)
 pg_db = os.getenv("PGDATABASE", "psma_201602")
 pg_user = os.getenv("PGUSER", "postgres")
 pg_password = os.getenv("PGPASSWORD", "password")
@@ -227,7 +227,7 @@ def run_command_line(cmd):
 
 
 def open_sql_file(file_name):
-    sql = open(sql_dir + file_name, "r").read()
+    sql = open(os.path.join(sql_dir, file_name), "r").read()
     return prep_sql(sql)
 
 
