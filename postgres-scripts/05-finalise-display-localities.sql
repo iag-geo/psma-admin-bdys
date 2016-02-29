@@ -422,5 +422,5 @@ DROP TABLE IF EXISTS admin_bdys.temp_localities;
 
 --select * from admin_bdys.locality_bdys_display where ST_IsEmpty(geom); -- 0
 
-select * from admin_bdys.temp_final_localities where NOT ST_IsValid(geom); -- 0
-select * from admin_bdys.locality_bdys_display where NOT ST_IsValid(geom); -- 0
+-- select * from admin_bdys.temp_final_localities where NOT ST_IsValid(geom); -- 0
+-- select * from admin_bdys.locality_bdys_display where NOT ST_IsValid(geom); -- 0

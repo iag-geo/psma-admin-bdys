@@ -1,8 +1,8 @@
 
--- create a state boundary tbale from sa4s (it looks visually better than the PSMA states table due to issues around bays e.g. Botany Bay, NSW) - 5 mins
+-- create a state boundary table from sa4s (it looks visually better than the PSMA states table due to issues around bays e.g. Botany Bay, NSW) - 5 mins
 
-DROP VIEW IF EXISTS admin_bdys.aus_sa4_2011;
-CREATE VIEW admin_bdys.aus_sa4_2011 AS
+DROP VIEW IF EXISTS raw_admin_bdys.sa4s;
+CREATE VIEW raw_admin_bdys.sa4s AS
 SELECT tab.sa4_11code,
        tab.sa4_11name,
        tab.gcc_11code,
@@ -34,7 +34,7 @@ INSERT INTO admin_bdys.temp_states (state, geom)
     SELECT state, ST_Union(ST_MakePolygon(geom)) As geom
     FROM (
         SELECT state, ST_ExteriorRing((ST_Dump(geom)).geom) As geom
-        FROM admin_bdys.aus_sa4_2011
+        FROM raw_admin_bdys.sa4s
         ) s
     GROUP BY state
   ) AS sqt;
