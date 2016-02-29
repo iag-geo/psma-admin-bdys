@@ -198,8 +198,7 @@ SELECT hol.hole_gid,
        hol.state;
 
 -- didn't split right
--- NOTICE:  NOT ENOUGH POLYGONS! : id 8882 : blades 4 : num output polys 3
--- NOTICE:  NOT ENOUGH POLYGONS! : id 18035 : blades 1 : num output polys 1
+-- NOTICE:  NOT ENOUGH POLYGONS! : id 6358 : blades 1 : num output polys 1
 
 --hole_gid IN (1144, 6033, 8882, 18035)
 
@@ -402,19 +401,20 @@ ANALYZE admin_bdys.locality_bdys_display;
 
 
 -- clean up
--- DROP TABLE IF EXISTS admin_bdys.temp_holes_split_locs;
--- DROP TABLE IF EXISTS admin_bdys.temp_final_localities2;
--- DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
--- DROP TABLE IF EXISTS admin_bdys.temp_hole_localities;
--- DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
--- DROP TABLE IF EXISTS admin_bdys.temp_holes;
--- DROP TABLE IF EXISTS admin_bdys.temp_split_localities;
--- DROP TABLE IF EXISTS admin_bdys.temp_states;
--- DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
--- DROP TABLE IF EXISTS admin_bdys.temp_hole_splitter_lines;
--- DROP TABLE IF EXISTS admin_bdys.temp_holes_split;
--- DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers;
--- DROP TABLE IF EXISTS admin_bdys.temp_state_lines;
+DROP TABLE IF EXISTS admin_bdys.temp_holes_split_locs;
+DROP TABLE IF EXISTS admin_bdys.temp_final_localities2;
+DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
+DROP TABLE IF EXISTS admin_bdys.temp_hole_localities;
+DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
+DROP TABLE IF EXISTS admin_bdys.temp_holes;
+DROP TABLE IF EXISTS admin_bdys.temp_split_localities;
+DROP TABLE IF EXISTS admin_bdys.temp_states;
+DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
+DROP TABLE IF EXISTS admin_bdys.temp_hole_splitter_lines;
+DROP TABLE IF EXISTS admin_bdys.temp_holes_split;
+DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers;
+DROP TABLE IF EXISTS admin_bdys.temp_state_lines;
+DROP TABLE IF EXISTS admin_bdys.temp_localities;
 
 
 
