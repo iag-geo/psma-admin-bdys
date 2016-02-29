@@ -35,6 +35,7 @@
 #
 # *********************************************************************************************************************
 
+import json
 import multiprocessing
 import math
 import os
@@ -103,7 +104,7 @@ def main():
     verify_locality_polygons(pg_cur)
     get_locality_state_border_gaps(pg_cur)
     finalise_display_localities(pg_cur)
-    export_display_localities()
+    export_display_localities(pg_cur)
     # qa_display_localities()
 
     pg_cur.close()
@@ -148,7 +149,7 @@ def finalise_display_localities(pg_cur):
     print "\t- Step 5 of 7 : display localities finalised : {0}".format(datetime.now() - start_time)
 
 
-def export_display_localities():
+def export_display_localities(pg_cur):
     start_time = datetime.now()
 
     sql = open_sql_file("06-export-display-localities.sql")
@@ -168,6 +169,52 @@ def export_display_localities():
 
     print "\t- Step 6 of 7 : display localities exported to SHP : {0}".format(datetime.now() - start_time)
     print "\t\t- IMPORTANT - if this step took < 1 second - it may have failed silently. Check your output directory!"
+    start_time = datetime.now()
+
+    # Export as GeoJSON FeatureCollection
+    sql = prep_sql("SELECT gid, locality_pid, locality_name, COALESCE(postcode, '') AS postcode, state, "
+                   "locality_class, address_count, street_count, ST_AsGeoJSON(geom, 5, 0) AS geom "
+                   "FROM admin_bdys.locality_bdys_display")
+    pg_cur.execute(sql)
+
+    # Create the GeoJSON output with an array of dictionaries containing the field names and values
+
+    # get column names from cursor
+    column_names = [desc[0] for desc in pg_cur.description]
+
+    json_dicts = []
+    row = pg_cur.fetchone()
+
+    if row is not None:
+        while row is not None:
+            rec = {}
+            props = {}
+            i = 0
+            rec["type"] = "Feature"
+
+            for column in column_names:
+                if column == "geometry" or column == "geom":
+                    rec["geometry"] = row[i]
+                else:
+                    props[column] = row[i]
+
+                i += 1
+
+            rec["properties"] = props
+            json_dicts.append(rec)
+            row = pg_cur.fetchone()
+
+    gj = json.dumps(json_dicts).replace("\\", "").replace('"{', '{').replace('}"', '}')
+
+    geojson = ''.join(['{"type":"FeatureCollection","features":', gj, '}'])
+
+    file_name = shapefile_export_path.replace(".shp", ".geojson")
+
+    text_file = open(file_name, "w")
+    text_file.write(geojson)
+    text_file.close()
+
+    print "\t- Step 6 of 7 : display localities exported to GeoJSON : {0}".format(datetime.now() - start_time)
 
 
 def qa_display_localities(pg_cur):
