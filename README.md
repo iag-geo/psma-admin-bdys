@@ -23,11 +23,9 @@ A better dataset for processing is the admin_bdys.locality_bdy_analysis table th
 
 ### I Just Want the Data!
 
-You can run this script to get the result or just download it from here:
-
-
-TO DO : ADD URL FROM IAG S3 BUCKET
-
+You can run the script to get the result or just download the data from here:
+- [Shapefile](https://s3-ap-southeast-2.amazonaws.com/locality.boundaries.test/locality_bdys_display_shapefile.zip) (~40Mb) 
+ -[GeoJSON](https://s3-ap-southeast-2.amazonaws.com/locality.boundaries.test/locality_bdys_display_geojson.zip) (~25Mb) 
 
 ### Script Pre-requisites
 
