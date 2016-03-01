@@ -10,6 +10,7 @@ Trims the boundaries to the coastline; fixes state border overlaps and gaps; and
 
 Original (yellow) versus clean (green) localities
 
+
 ![border-comparison](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/border-comparison.png "clean vs original borders")
 
 Original (left) versus clean (right) borders
