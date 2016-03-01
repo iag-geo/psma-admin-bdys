@@ -37,7 +37,7 @@ TO DO : ADD URL FROM IAG S3 BUCKET
 - Python 2.7 with Psycopg2 2.6
 
 ### Missing localities
-Trimming the boundaries to the coastline removes a small number of bay or estuary based localities (that have very few 'addresses').
+Trimming the boundaries to the coastline removes a small number of bay or estuary based localities.  These have very few G-NAF addresses.
 
 These localities are:
 
