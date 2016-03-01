@@ -17,7 +17,7 @@ Original (left) versus clean (right) borders
 
 ### Important
 
-The cleaned localities are not well suited to data processing as they have been deliberately thinned to improved display performance.
+The cleaned localities are not well suited to data processing as they have been deliberately thinned to improve display performance.
 
 A better dataset fopr processing is the analysis locality boundary table that gets created in the [gnaf-loader](https://github.com/minus34/gnaf-loader) process
 
