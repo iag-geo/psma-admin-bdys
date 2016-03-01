@@ -10,6 +10,9 @@ Trims the boundaries to the coastline; fixes state border overlaps and gaps; and
 Clean localities (green) versus the original localities (yellow)
 
 
+![alt text](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/original-borders.png "clean vs original borders")
+![alt text](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/fixed-borders.png "clean borders")
+
 ### I Just Want the Data!
 
 You can run this script to get the result or just download it from here:
