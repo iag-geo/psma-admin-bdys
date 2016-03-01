@@ -14,6 +14,12 @@ Original (yellow) versus clean (green) localities
 
 Original (left) versus clean (right) borders
 
+### Important
+
+The cleaned localities are not well suited to data processing as they have been deliberately thinned to improved display performance.
+
+A much better datset are the analysis locality boundaries that get created in the [gnaf-loader](https://github.com/minus34/gnaf-loader) process
+
 ### I Just Want the Data!
 
 You can run this script to get the result or just download it from here:
@@ -22,15 +28,15 @@ You can run this script to get the result or just download it from here:
 TO DO : ADD URL FROM IAG S3 BUCKET
 
 
-### Pre-requisites
+### Script Pre-requisites
 
-- You will need to have either: run the gnaf-loader script; or loaded the gnaf-loader admin-bdys schema and data into Postgres (see https://github.com/minus34/gnaf-loader)
+- You will need to run the [gnaf-loader](https://github.com/minus34/gnaf-loader) script to load the required Admin Bdy tables into Postgres
 - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 on OSX)
-- PostGIS 2.1+ 
-- Python 2.7.x with Psycopg2 2.6.x
+- PostGIS 2.1+
+- Python 2.7 with Psycopg2 2.6
 
 ### Missing localities
-Trimming the boundaries to the coastline requires a small number of bay or estuary based localities (that have very few 'addresses') to be removed.
+Trimming the boundaries to the coastline removes a small number of bay or estuary based localities (that have very few 'addresses').
 
 These localities are:
 
