@@ -6,7 +6,7 @@ A Python script for creating a clean version of the Suburb-Locality boundaries f
 
 Trims the boundaries to the coastline; fixes state border overlaps and gaps; and thins the boundaries for faster display performance in desktop GIS tools and in browsers.
 
-!(https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/aus.png)
+![alt text](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/aus.png "clean vs original localities")
 Clean localities (green) versus the original localities (yellow)
 
 
