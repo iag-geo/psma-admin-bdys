@@ -55,7 +55,7 @@ max_concurrent_processes = 6
 
 # Postgres parameters. These will also respect the standard PGHOST/PGPORT/etc environment variables if set.
 pg_host = os.getenv("PGHOST", "localhost")
-pg_port = os.getenv("PGPORT", 5432)
+pg_port = os.getenv("PGPORT", 5434)
 pg_db = os.getenv("PGDATABASE", "psma_201602")
 pg_user = os.getenv("PGUSER", "postgres")
 pg_password = os.getenv("PGPASSWORD", "password")

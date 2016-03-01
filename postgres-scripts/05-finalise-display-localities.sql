@@ -352,10 +352,8 @@ ALTER TABLE admin_bdys.temp_final_localities2 OWNER TO postgres;
 
 INSERT INTO admin_bdys.temp_final_localities2 (locality_pid, geom)
 SELECT locality_pid,
-       (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_Simplify(ST_Union(geom), 0.00002), 0.00001))))).geom
-  FROM admin_bdys.temp_final_localities
-  --WHERE area > 0.05 OR locality_pid IN ('SA514', 'SA1015', 'SA1553', 'WA1705') --  preserve these locality polygons
-  GROUP BY locality_pid;
+       (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_Simplify(geom, 0.00002), 0.00001))))).geom
+  FROM admin_bdys.temp_final_localities;
 
 DELETE FROM admin_bdys.temp_final_localities2 WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 38
 
