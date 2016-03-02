@@ -24,8 +24,8 @@ A better dataset for processing is the admin_bdys.locality_bdy_analysis table th
 ### I Just Want the Data!
 
 You can run the script to get the result or just download the data from here:
-- [Shapefile](https://s3-ap-southeast-2.amazonaws.com/locality.boundaries.test/locality_bdys_display_shapefile.zip) (~40Mb) 
-- [GeoJSON](https://s3-ap-southeast-2.amazonaws.com/locality.boundaries.test/locality_bdys_display_geojson.zip) (~25Mb) 
+- [Shapefile](https://github.com/iag-geo/psma-admin-bdys/releases/download/v1.0/locality_bdys_display_shapefile.zip) (~40Mb) 
+- [GeoJSON](https://github.com/iag-geo/psma-admin-bdys/releases/download/v1.0/locality_bdys_display_geojson.zip) (~25Mb) 
 
 #### Data License
 
