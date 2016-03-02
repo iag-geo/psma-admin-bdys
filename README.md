@@ -8,12 +8,12 @@ Trims the boundaries to the coastline; fixes state border overlaps and gaps; and
 
 ![aus.png](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/aus.png "clean vs original localities")
 
-Original (yellow) versus clean (green) localities
+Coastline improvements
 
 
 ![border-comparison](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/border-comparison.png "clean vs original borders")
 
-Original (left) versus clean (right) borders
+State border improvements
 
 ### Important
 
