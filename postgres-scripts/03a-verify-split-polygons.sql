@@ -64,3 +64,23 @@ UPDATE admin_bdys.temp_split_localities AS loc
   AND loc.match_type = 'SPLIT';
 
 DROP TABLE IF EXISTS admin_bdys.temp_locality_centroid;
+
+
+-- fix slivers on the borders that are valid parts of localities (albeit split localities due to overlaps with the other side of the border)
+UPDATE admin_bdys.temp_split_Localities as loc -- 29
+  SET match_type = 'BORDER SLIVER'
+  FROM admin_bdys.temp_state_border_buffers as ste
+  WHERE (st_intersects(loc.geom, ste.geom)
+    AND loc.loc_state = ste.state)
+  AND loc.match_type = 'SPLIT'
+  AND loc.locality_pid <> 'NSW2046'; -- Jervis Bay issue
+
+-- fix slivers that aren't connected to the main locality due to the border
+UPDATE admin_bdys.temp_split_localities AS loc1
+SET locality_pid = loc2.locality_pid
+  FROM admin_bdys.temp_split_localities AS loc2
+  WHERE (ST_Touches(loc1.geom, loc2.geom)
+    AND loc1.loc_state = loc2.loc_state
+    AND loc1.locality_pid <> loc2.locality_pid)
+  AND loc1.match_type = 'BORDER SLIVER';
+
