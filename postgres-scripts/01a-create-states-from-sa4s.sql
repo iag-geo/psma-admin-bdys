@@ -117,3 +117,29 @@ ANALYZE admin_bdys.temp_state_border_buffers;
 DROP TABLE IF EXISTS temp_borders_2;
 DROP TABLE IF EXISTS temp_borders;
 
+
+-- create subdivided buffered borders for performance
+DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers_subdivided;
+CREATE TABLE admin_bdys.temp_state_border_buffers_subdivided(
+  new_gid serial NOT NULL,
+  gid integer NOT NULL,
+  state character varying(7) NOT NULL,
+  geom geometry(Polygon,4283) NOT NULL
+) WITH (OIDS=FALSE);
+ALTER TABLE admin_bdys.temp_state_border_buffers_subdivided OWNER TO postgres;
+
+INSERT INTO admin_bdys.temp_state_border_buffers_subdivided (gid, state, geom)
+SELECT gid,
+       state,
+       ST_Subdivide(geom, 512)
+  FROM admin_bdys.temp_state_border_buffers;
+
+CREATE INDEX temp_state_border_buffers_subdivided_idx ON admin_bdys.temp_state_border_buffers_subdivided USING btree (state);
+CREATE INDEX temp_state_border_buffers_subdivided_geom_idx ON admin_bdys.temp_state_border_buffers_subdivided USING gist (geom);
+ALTER TABLE admin_bdys.temp_state_border_buffers_subdivided CLUSTER ON temp_state_border_buffers_subdivided_geom_idx;
+
+ANALYZE admin_bdys.temp_state_border_buffers_subdivided;
+
+
+
+

@@ -1,4 +1,18 @@
 
+-- add holes from subdivided border buffers that are entirely holes (and subsequently have been ignored) -- 280
+INSERT INTO admin_bdys.temp_holes (state_gid, state, geom)
+SELECT ste.new_gid,
+       ste.state,
+       ste.geom
+  FROM admin_bdys.temp_state_border_buffers_subdivided AS ste
+  INNER JOIN admin_bdys.temp_holes AS lne
+  ON ST_Touches(ste.geom, lne.geom)
+  LEFT OUTER JOIN admin_bdys.temp_holes AS hol 
+  ON ste.new_gid = hol.state_gid
+  WHERE hol.state_gid IS NULL;
+
+
+-- create merged holes
 DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
 CREATE TABLE admin_bdys.temp_holes_distinct (
   hole_gid serial NOT NULL PRIMARY KEY,
@@ -11,12 +25,10 @@ ALTER TABLE admin_bdys.temp_holes_distinct OWNER TO postgres;
 CREATE INDEX temp_holes_distinct_geom_idx ON admin_bdys.temp_holes_distinct USING gist (geom);
 ALTER TABLE admin_bdys.temp_holes_distinct CLUSTER ON temp_holes_distinct_geom_idx;
 
-INSERT INTO admin_bdys.temp_holes_distinct (state, geom) -- 13192 
-SELECT state, ST_MakeValid(ST_Buffer((ST_Dump(ST_Union(ST_Buffer(ST_Buffer(geom, -0.00000001), 0.00000002)))).geom, 0.0)) FROM admin_bdys.temp_holes GROUP BY state;
---SELECT state, (ST_Dump(ST_MakeValid(ST_Buffer(ST_Buffer(ST_Union(geom), -0.00000001), 0.00000002)))).geom FROM admin_bdys.temp_holes GROUP BY state;
-
--- UPDATE admin_bdys.temp_holes_distinct -- 14888 
---   SET geom = (ST_Dump(ST_MakeValid(ST_Buffer(ST_Buffer(geom, -0.0000001), 0.0000002)))).geom;
+INSERT INTO admin_bdys.temp_holes_distinct (state, geom) -- 13192 -- 15458 
+SELECT state, ST_MakeValid(ST_Buffer((ST_Dump(ST_Union(ST_Buffer(ST_Buffer(geom, -0.00000001), 0.00000002)))).geom, 0.0))
+  FROM admin_bdys.temp_holes
+  GROUP BY state;
 
 ANALYZE admin_bdys.temp_holes_distinct;
 
@@ -27,7 +39,7 @@ ANALYZE admin_bdys.temp_holes_distinct;
 
 -- update locality/state border holes with locality PIDs when there is only one locality touching it (in the same state)
 
-DROP TABLE IF EXISTS admin_bdys.temp_hole_localities; -- 1 min -- 20365  
+DROP TABLE IF EXISTS admin_bdys.temp_hole_localities; -- 1 min -- 20365 -- 15677 
 SELECT DISTINCT loc.locality_pid, hol.hole_gid 
   INTO admin_bdys.temp_hole_localities
   FROM admin_bdys.temp_split_localities AS loc
@@ -36,7 +48,7 @@ SELECT DISTINCT loc.locality_pid, hol.hole_gid
     AND loc.loc_state = hol.state);
 
 
--- set good matches in temp table -- 17226 
+-- set good matches in temp table -- 17226 -- 15249 
 UPDATE admin_bdys.temp_holes_distinct AS hol
   SET locality_pid = loc.locality_pid,
       match_type = 'GOOD'
@@ -49,7 +61,7 @@ UPDATE admin_bdys.temp_holes_distinct AS hol
   AND sqt.cnt = 1;
 
 
--- Add good holes to split localities -- 17226 
+-- Add good holes to split localities -- 17226 -- 15249 
 INSERT INTO admin_bdys.temp_split_localities (gid, locality_pid, loc_state, ste_state, match_type, geom)
 SELECT 900000000 + hole_gid,
        locality_pid,
@@ -60,21 +72,21 @@ SELECT 900000000 + hole_gid,
   FROM admin_bdys.temp_holes_distinct
   WHERE match_type = 'GOOD';
 
---turf the good records so we can focus on the rest -- 17226  
+--turf the good records so we can focus on the rest -- 17226 -- 15249 
 DELETE FROM admin_bdys.temp_hole_localities AS loc
   USING admin_bdys.temp_holes_distinct AS hol
   WHERE loc.hole_gid = hol.hole_gid
   AND hol.locality_pid IS NOT NULL;
 
 
--- Delete unmatched holes that have an area < 1m2 -- 8577 
+-- Delete unmatched holes that have an area < 1m2 -- 8577 -- 5171 
 DELETE FROM admin_bdys.temp_holes_distinct
   WHERE ST_Area(ST_Transform(geom, 3577)) < 1.0;
 
 
 -- split remaining locality/state border holes at the point where 2 localities meet the hole and add to working localities table
 
--- get locality polygon points along shared edges of remaining holes -- 15499      
+-- get locality polygon points along shared edges of remaining holes -- 15499 -- 15667 
 DROP TABLE IF EXISTS admin_bdys.temp_hole_points_temp;
 SELECT DISTINCT *
   INTO admin_bdys.temp_hole_points_temp
@@ -88,7 +100,7 @@ SELECT DISTINCT *
       INNER JOIN admin_bdys.temp_hole_localities AS lochol ON hol.hole_gid = lochol.hole_gid
 ) AS sqt;
 
--- get unique points shared by more than 1 locality - 239
+-- get unique points shared by more than 1 locality - 239 -- 226 
 DROP TABLE IF EXISTS admin_bdys.temp_hole_points;
 CREATE TABLE admin_bdys.temp_hole_points
 (
@@ -103,15 +115,14 @@ INSERT INTO admin_bdys.temp_hole_points (hole_gid, state, geom)
 SELECT hole_gid, state, geom
     FROM (
     SELECT Count(*) AS cnt, hole_gid, state, geom FROM admin_bdys.temp_hole_points_temp GROUP BY hole_gid, state, geom
---     SELECT Count(*) AS cnt, hole_gid, state, ST_Y(geom)::numeric(10,8) AS latitude, ST_X(geom)::numeric(11,8) AS longitude FROM admin_bdys.temp_hole_points_temp GROUP BY hole_gid, state, ST_Y(geom)::numeric(10,8), ST_X(geom)::numeric(11,8)
   ) AS sqt
   WHERE sqt.cnt > 1;
 
---DROP TABLE IF EXISTS admin_bdys.temp_hole_points_temp;
+DROP TABLE IF EXISTS admin_bdys.temp_hole_points_temp;
 
 
 -- get points shared between 2 localities to the state border (to be used to split the remaining holes)
-DROP TABLE IF EXISTS admin_bdys.temp_line_points; -- 1317       
+DROP TABLE IF EXISTS admin_bdys.temp_line_points; -- 1317 -- 1246
 SELECT DISTINCT pnt.gid,
        pnt.hole_gid,
        pnt.state,
@@ -121,10 +132,10 @@ SELECT DISTINCT pnt.gid,
   FROM admin_bdys.temp_hole_points AS pnt
   INNER JOIN admin_bdys.temp_state_border_buffers AS ste ON pnt.state = ste.state;
 
---DROP TABLE IF EXISTS admin_bdys.temp_hole_points;
+DROP TABLE IF EXISTS admin_bdys.temp_hole_points;
 
 -- calc values for extending a line beyond the 2 points were interested in
-DROP TABLE IF EXISTS admin_bdys.temp_line_calcs; -- 1317        
+DROP TABLE IF EXISTS admin_bdys.temp_line_calcs; -- 1317 -- 1246
 SELECT gid,
        hole_gid,
        state,
@@ -136,19 +147,18 @@ SELECT gid,
   FROM admin_bdys.temp_line_points;
 
 -- get lines from points shared between 2 localities to the state border (to be used to split the remaining holes)
-DROP TABLE IF EXISTS admin_bdys.temp_hole_lines; -- 1317       
+DROP TABLE IF EXISTS admin_bdys.temp_hole_lines; -- 1317 -- 1246
 SELECT DISTINCT pnt.gid,
        pnt.hole_gid,
        pnt.state,
        pnt.dist,
        ST_MakeLine(ST_Translate(pnt.geom, sin(azimuthBA) * 0.00001, cos(azimuthBA) * 0.00001), ST_Translate(pnt.geom, sin(azimuthAB) * pnt.dist, cos(azimuthAB) * pnt.dist))::geometry(Linestring, 4283) AS geom
---        ST_MakeLine(pnt.geom, ST_Translate(pnt.geom, sin(azimuthAB) * pnt.dist, cos(azimuthAB) * pnt.dist))::geometry(Linestring, 4283) AS geom
   INTO admin_bdys.temp_hole_lines
   FROM admin_bdys.temp_line_calcs AS pnt
   INNER JOIN admin_bdys.temp_state_border_buffers AS ste ON pnt.state = ste.state;
 
 
--- get the shortest splitter lines -- 191
+-- get the shortest splitter lines -- 191 -- 188
 DROP TABLE IF EXISTS admin_bdys.temp_hole_splitter_lines;
 SELECT lne.hole_gid,
        lne.state,
@@ -162,19 +172,12 @@ SELECT lne.hole_gid,
   GROUP BY lne.hole_gid,
        lne.state;
 
--- DROP TABLE IF EXISTS admin_bdys.temp_line_points;
+DROP TABLE IF EXISTS admin_bdys.temp_line_points;
 DROP TABLE IF EXISTS admin_bdys.temp_line_calcs;
 DROP TABLE IF EXISTS admin_bdys.temp_hole_lines;
 
 
--- -- manual fix for NT/QLD border issue
--- INSERT INTO admin_bdys.temp_hole_splitter_lines
--- SELECT (SELECT gid FROM admin_bdys.temp_holes_distinct WHERE ST_Intersects(St_SetSRID(ST_MakePoint(137.999, -17.600), 4283), geom)),
---        'NT',
---        ST_Multi(ST_GeomFromText('LINESTRING(137.99519933848674214 -17.6113710627822293, 138.00147236831551822 -17.61135804369208557)', 4283));
-
-
--- spit the remaining holes -- -- 423
+-- split the remaining holes -- -- 416
 DROP TABLE IF EXISTS admin_bdys.temp_holes_split;
 CREATE TABLE admin_bdys.temp_holes_split
 (
@@ -191,7 +194,6 @@ INSERT INTO admin_bdys.temp_holes_split (hole_gid, state, type, geom)
 SELECT hol.hole_gid,
        hol.state,
        'SPLIT',
-       --(ST_Dump(ST_SplitPolygon(hol.gid, hol.geom, lne.geom))).geom::geometry(Polygon, 4283) AS geom
        (ST_Dump(ST_SplitPolygon(hol.hole_gid, ST_Buffer(ST_Buffer(hol.geom, -0.00000001), 0.00000002), ST_Union(lne.geom)))).geom::geometry(Polygon, 4283) AS geom
   FROM admin_bdys.temp_hole_splitter_lines AS lne
   INNER JOIN admin_bdys.temp_holes_distinct AS hol
@@ -200,11 +202,11 @@ SELECT hol.hole_gid,
   GROUP BY hol.hole_gid,
        hol.state;
 
--- didn't split right
--- NOTICE:  NOT ENOUGH POLYGONS! : id 16475 : blades 1 : num output polys 1
+-- didn't split right - these are Ok!
+-- NOTICE:  NOT ENOUGH POLYGONS! : id 15157 : blades 1 : num output polys 1
+-- NOTICE:  NOT ENOUGH POLYGONS! : id 731 : blades 17 : num output polys 1
 
-
--- assign fixed holes to localities -- 760
+-- assign fixed holes to localities -- 760 -- 799
 DROP TABLE IF EXISTS admin_bdys.temp_holes_split_locs;
 SELECT hol.gid,
        loc.locality_pid,
@@ -215,10 +217,8 @@ SELECT hol.gid,
   INNER JOIN admin_bdys.temp_split_localities AS loc
   ON (ST_Intersects(hol.geom, loc.geom) AND hol.state = loc.loc_state);
 
---select * from admin_bdys.temp_holes_split_locs where gid = 275;
 
-
--- get the locality pids with the most frontage to the split holes -- 423
+-- get the locality pids with the most frontage to the split holes -- 423 -- 415
 UPDATE admin_bdys.temp_holes_split as spl
   SET locality_pid = hol.locality_pid
   FROM (
@@ -230,7 +230,7 @@ UPDATE admin_bdys.temp_holes_split as spl
   AND hol.dist > 0;
 
 
---update holes distinct so we can see who hasn't been allocated -- 187
+--update holes distinct so we can see who hasn't been allocated -- 187 -- 188
 UPDATE admin_bdys.temp_holes_distinct AS hol
   SET match_type = 'MESSY'
   FROM admin_bdys.temp_holes_split as spl
@@ -238,7 +238,7 @@ UPDATE admin_bdys.temp_holes_distinct AS hol
   AND spl.locality_pid IS NOT NULL;
 
 
--- Add good holes to split localities -- 423
+-- Add good holes to split localities -- 423 -- 415
 INSERT INTO admin_bdys.temp_split_localities (gid, locality_pid, loc_state, ste_state, match_type, geom)
 SELECT 900000000 + gid,
        locality_pid,
@@ -250,32 +250,20 @@ SELECT 900000000 + gid,
   WHERE locality_pid IS NOT NULL;
 
 
--- update locality polygons that have a manual fix point on them -- 160
+-- update locality polygons that have a manual fix point on them -- 160 -- 159
 UPDATE admin_bdys.temp_split_localities AS loc
   SET match_type = 'MANUAL'
   FROM admin_bdys.temp_messy_centroids AS pnt
   WHERE (ST_Within(pnt.geom, loc.geom) OR loc.locality_pid = 'NSW4451') -- NSW4451 = Woronora
   AND loc.match_type = 'SPLIT';
 
--- manual fix to remove an unpopulated, oversized torres straight, QLD polygon
+-- manual fix to remove an unpopulated, oversized torres straight, QLD polygon -- 1
 UPDATE admin_bdys.temp_split_localities
   SET match_type = 'SPLIT'
   WHERE ST_Intersects(ST_SetSRID(ST_MakePoint(144.227305683, -9.39107887741), 4283), geom);
 
 
-
-
--- --merge the results into a single table
--- DROP TABLE IF EXISTS admin_bdys.temp_sqt;
--- SELECT locality_pid,
---        ST_Multi(ST_Union(geom)) AS geom
---   INTO admin_bdys.temp_sqt
---   FROM admin_bdys.temp_split_localities
---   WHERE match_type <> 'SPLIT'
---   GROUP BY locality_pid;
-
-
--- merge final polygons -- 3 mins -- 15565 
+-- merge final polygons -- 3 mins -- 15565  
 DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
 CREATE TABLE admin_bdys.temp_final_localities (
   locality_pid character varying(16),
@@ -284,23 +272,15 @@ CREATE TABLE admin_bdys.temp_final_localities (
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_final_localities OWNER TO postgres;
 
-INSERT INTO admin_bdys.temp_final_localities (locality_pid, geom) -- 34730 
+INSERT INTO admin_bdys.temp_final_localities (locality_pid, geom) 
 SELECT locality_pid,
---       ST_Multi(ST_Union((ST_Dump(ST_Buffer(ST_Buffer(geom, -0.00000001), 0.00000001))).geom))
        ST_Multi(ST_Buffer(ST_Buffer(ST_Union(geom), -0.00000001), 0.00000001))
   FROM admin_bdys.temp_split_localities
   WHERE match_type <> 'SPLIT'
   GROUP BY locality_pid;
-  --FROM admin_bdys.temp_sqt;
-
---DROP TABLE IF EXISTS admin_bdys.temp_sqt;
-
--- -- get areas
--- UPDATE admin_bdys.temp_final_localities
---   SET area = (ST_Area(ST_Transform(geom, 3577)) / 1000000)::numeric(20,3);
 
 
--- simplify and clean up data, removing unwanted artifacts -- 1 min -- 17751 
+-- simplify and clean up data, removing unwanted artifacts -- 1 min -- 17731 
 DROP TABLE IF EXISTS admin_bdys.temp_final_localities2;
 CREATE TABLE admin_bdys.temp_final_localities2 (
   locality_pid character varying(16),
@@ -313,7 +293,7 @@ SELECT locality_pid,
        (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_Simplify(geom, 0.00002), 0.00001))))).geom
   FROM admin_bdys.temp_final_localities;
 
-DELETE FROM admin_bdys.temp_final_localities2 WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 38
+DELETE FROM admin_bdys.temp_final_localities2 WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
 
 
 -- insert grouped polygons into final table
@@ -335,7 +315,7 @@ ALTER TABLE admin_bdys.locality_bdys_display OWNER TO postgres;
 CREATE INDEX localities_display_geom_idx ON admin_bdys.locality_bdys_display USING gist (geom);
 ALTER TABLE admin_bdys.locality_bdys_display CLUSTER ON localities_display_geom_idx;
 
-INSERT INTO admin_bdys.locality_bdys_display(locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15561 
+INSERT INTO admin_bdys.locality_bdys_display(locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565 
 SELECT loc.locality_pid,
        loc.locality_name,
        loc.postcode,
@@ -357,30 +337,17 @@ ANALYZE admin_bdys.locality_bdys_display;
 
 
 -- clean up
---DROP TABLE IF EXISTS admin_bdys.temp_holes_split_locs;
---DROP TABLE IF EXISTS admin_bdys.temp_final_localities2;
+DROP TABLE IF EXISTS admin_bdys.temp_holes_split_locs;
+DROP TABLE IF EXISTS admin_bdys.temp_final_localities2;
 --DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
---DROP TABLE IF EXISTS admin_bdys.temp_hole_localities;
---DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
---DROP TABLE IF EXISTS admin_bdys.temp_holes;
---DROP TABLE IF EXISTS admin_bdys.temp_split_localities;
---DROP TABLE IF EXISTS admin_bdys.temp_states;
---DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
---DROP TABLE IF EXISTS admin_bdys.temp_hole_splitter_lines;
---DROP TABLE IF EXISTS admin_bdys.temp_holes_split;
---DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers;
---DROP TABLE IF EXISTS admin_bdys.temp_state_lines;
---DROP TABLE IF EXISTS admin_bdys.temp_localities;
-
-
-select ST_Area(ST_Transform(geom, 3577)) AS area, * from admin_bdys.temp_holes_distinct where match_type IS NULL;
-
-
-
--- ST_Area(ST_Transform(loc1.geom, 3577)) < 3000
---   AND 
-
---select * from admin_bdys.locality_bdys_display where ST_IsEmpty(geom); -- 0
-
--- select * from admin_bdys.temp_final_localities where NOT ST_IsValid(geom); -- 0
--- select * from admin_bdys.locality_bdys_display where NOT ST_IsValid(geom); -- 0
+DROP TABLE IF EXISTS admin_bdys.temp_hole_localities;
+DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
+DROP TABLE IF EXISTS admin_bdys.temp_holes;
+DROP TABLE IF EXISTS admin_bdys.temp_split_localities;
+DROP TABLE IF EXISTS admin_bdys.temp_states;
+DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
+DROP TABLE IF EXISTS admin_bdys.temp_hole_splitter_lines;
+DROP TABLE IF EXISTS admin_bdys.temp_holes_split;
+DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers;
+DROP TABLE IF EXISTS admin_bdys.temp_state_lines;
+DROP TABLE IF EXISTS admin_bdys.temp_localities;

@@ -11,6 +11,17 @@ SELECT '| ' || loc.locality_pid || ' | ' || loc.locality_name || ' | ' || COALES
 
 
 
+-- QA bad polygons
+
+-- select ST_Area(ST_Transform(geom, 3577)) AS area, * from admin_bdys.temp_holes_distinct where match_type IS NULL;
+
+--select * from admin_bdys.locality_bdys_display where ST_IsEmpty(geom); -- 0
+
+-- select * from admin_bdys.temp_final_localities where NOT ST_IsValid(geom); -- 0
+-- select * from admin_bdys.locality_bdys_display where NOT ST_IsValid(geom); -- 0
+
+
+
 -- 
 -- 
 -- -- QA - PSMA changes
