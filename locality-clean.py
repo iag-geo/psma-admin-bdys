@@ -51,12 +51,12 @@ from datetime import datetime
 
 # what are the maximum parallel processes you want to use for the data load?
 # (set it to the number of cores on the Postgres server minus 2, limit to 12 if 16+ cores - minimal benefit beyond 12)
-max_concurrent_processes = 6
+max_concurrent_processes = 24
 
 # Postgres parameters. These will also respect the standard PGHOST/PGPORT/etc environment variables if set.
 pg_host = os.getenv("PGHOST", "localhost")
-pg_port = os.getenv("PGPORT", 5432)
-pg_db = os.getenv("PGDATABASE", "psma_201602")
+pg_port = os.getenv("PGPORT", 5434)
+pg_db = os.getenv("PGDATABASE", "test")
 pg_user = os.getenv("PGUSER", "postgres")
 pg_password = os.getenv("PGPASSWORD", "password")
 
@@ -105,7 +105,7 @@ def main():
     get_locality_state_border_gaps(pg_cur)
     finalise_display_localities(pg_cur)
     export_display_localities(pg_cur)
-    # qa_display_localities()
+    # qa_display_localities(pg_cur)
 
     pg_cur.close()
     pg_conn.close()
@@ -139,7 +139,7 @@ def verify_locality_polygons(pg_cur):
 def get_locality_state_border_gaps(pg_cur):
     start_time = datetime.now()
     sql = open_sql_file("04-create-holes-along-borders.sql")
-    split_sql_into_list_and_process(pg_cur, sql, admin_bdys_schema, "temp_state_border_buffers", "ste", "gid")
+    split_sql_into_list_and_process(pg_cur, sql, admin_bdys_schema, "temp_state_border_buffers_subdivided", "ste", "new_gid")
     print "\t- Step 4 of 7 : locality holes created : {0}".format(datetime.now() - start_time)
 
 
