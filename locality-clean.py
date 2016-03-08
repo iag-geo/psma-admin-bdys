@@ -51,12 +51,12 @@ from datetime import datetime
 
 # what are the maximum parallel processes you want to use for the data load?
 # (set it to the number of cores on the Postgres server minus 2, limit to 12 if 16+ cores - minimal benefit beyond 12)
-max_concurrent_processes = 24
+max_concurrent_processes = 6
 
 # Postgres parameters. These will also respect the standard PGHOST/PGPORT/etc environment variables if set.
 pg_host = os.getenv("PGHOST", "localhost")
-pg_port = os.getenv("PGPORT", 5434)
-pg_db = os.getenv("PGDATABASE", "test")
+pg_port = os.getenv("PGPORT", 5432)
+pg_db = os.getenv("PGDATABASE", "psma_201602")
 pg_user = os.getenv("PGUSER", "postgres")
 pg_password = os.getenv("PGPASSWORD", "password")
 
@@ -66,6 +66,7 @@ admin_bdys_schema = "admin_bdys"
 
 # full path and file name to export the resulting Shapefile to
 shapefile_export_path = r"C:\temp\psma_201602\locality_bdys_display.shp"
+geojson_export_path = r"C:\temp\psma_201602\locality_bdys_display.geojson"
 
 # *********************************************************************************************************************
 # Edit these parameters to taste - END
@@ -105,7 +106,7 @@ def main():
     get_locality_state_border_gaps(pg_cur)
     finalise_display_localities(pg_cur)
     export_display_localities(pg_cur)
-    # qa_display_localities(pg_cur)
+    qa_display_localities(pg_cur)
 
     pg_cur.close()
     pg_conn.close()
@@ -139,7 +140,8 @@ def verify_locality_polygons(pg_cur):
 def get_locality_state_border_gaps(pg_cur):
     start_time = datetime.now()
     sql = open_sql_file("04-create-holes-along-borders.sql")
-    split_sql_into_list_and_process(pg_cur, sql, admin_bdys_schema, "temp_state_border_buffers_subdivided", "ste", "new_gid")
+    split_sql_into_list_and_process(pg_cur, sql, admin_bdys_schema, "temp_state_border_buffers_subdivided",
+                                    "ste", "new_gid")
     print "\t- Step 4 of 7 : locality holes created : {0}".format(datetime.now() - start_time)
 
 
@@ -208,9 +210,7 @@ def export_display_localities(pg_cur):
 
     geojson = ''.join(['{"type":"FeatureCollection","features":', gj, '}'])
 
-    file_name = shapefile_export_path.replace(".shp", ".geojson")
-
-    text_file = open(file_name, "w")
+    text_file = open(geojson_export_path, "w")
     text_file.write(geojson)
     text_file.close()
 
@@ -218,12 +218,19 @@ def export_display_localities(pg_cur):
 
 
 def qa_display_localities(pg_cur):
+    print "\t- Step 7 of 7 : Start QA"
     start_time = datetime.now()
-    pg_cur.execute(prep_sql("select * from admin_bdys.localities_display where NOT ST_IsValid(geom);"))
 
-    pg_cur.execute(prep_sql("select * from admin_bdys.localities_display where NOT ST_IsEmpty(geom);"))
+    pg_cur.execute(prep_sql("SELECT locality_pid, Locality_name, postcode, state, address_count, street_count "
+                            "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);"))
+    display_qa_results("Invalid Geometries", pg_cur)
+
+    pg_cur.execute(prep_sql("SELECT locality_pid, Locality_name, postcode, state, address_count, street_count "
+                            "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);"))
+    display_qa_results("Empty Geometries", pg_cur)
 
     pg_cur.execute(open_sql_file("07-qa-display-localities.sql"))
+    display_qa_results("Dropped Localities", pg_cur)
 
     print "\t- Step 7 of 7 : display localities qa'd : {0}".format(datetime.now() - start_time)
 
@@ -341,6 +348,24 @@ def split_sql_into_list_and_process(pg_cur, the_sql, table_schema, table_name, t
 
     # print '\n'.join(sql_list)
     multiprocess_list(processes, 'sql', sql_list)
+
+
+def display_qa_results(purpose, pg_cur):
+    print "\t\t" + purpose
+    print "\t\t----------------------------------------"
+
+    results = pg_cur.fetchall()
+
+    if results is not None:
+        # Print the column names returned
+        print "\t\t" + ",".join([desc[0] for desc in pg_cur.description])
+
+        for result in results:
+            print "\t\t" + ",".join(map(str,result))
+    else:
+        print "\t\t" + "No records"
+
+    print "\t\t----------------------------------------"
 
 
 if __name__ == '__main__':
