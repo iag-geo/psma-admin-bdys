@@ -264,36 +264,39 @@ UPDATE admin_bdys.temp_split_localities
 
 
 -- merge final polygons -- 3 mins -- 15565  
-DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
-CREATE TABLE admin_bdys.temp_final_localities (
-  locality_pid character varying(16),
+DROP TABLE IF EXISTS admin_bdys.locality_bdys_display_full_res;
+CREATE TABLE admin_bdys.locality_bdys_display_full_res (
+  locality_pid character varying(16) PRIMARY KEY,
   geom geometry(MultiPolygon, 4283),
   area numeric(20,3)
 ) WITH (OIDS=FALSE);
-ALTER TABLE admin_bdys.temp_final_localities OWNER TO postgres;
+ALTER TABLE admin_bdys.locality_bdys_display_full_res OWNER TO postgres;
 
-INSERT INTO admin_bdys.temp_final_localities (locality_pid, geom) 
+INSERT INTO admin_bdys.locality_bdys_display_full_res (locality_pid, geom) 
 SELECT locality_pid,
        ST_Multi(ST_Buffer(ST_Buffer(ST_Union(geom), -0.00000001), 0.00000001))
   FROM admin_bdys.temp_split_localities
   WHERE match_type <> 'SPLIT'
   GROUP BY locality_pid;
 
+CREATE INDEX localities_display_full_res_geom_idx ON admin_bdys.locality_bdys_display_full_res USING gist (geom);
+ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_display_full_res_geom_idx;
+
 
 -- simplify and clean up data, removing unwanted artifacts -- 1 min -- 17731 
-DROP TABLE IF EXISTS admin_bdys.temp_final_localities2;
-CREATE TABLE admin_bdys.temp_final_localities2 (
+DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
+CREATE TABLE admin_bdys.temp_final_localities (
   locality_pid character varying(16),
   geom geometry
 ) WITH (OIDS=FALSE);
-ALTER TABLE admin_bdys.temp_final_localities2 OWNER TO postgres;
+ALTER TABLE admin_bdys.temp_final_localities OWNER TO postgres;
 
-INSERT INTO admin_bdys.temp_final_localities2 (locality_pid, geom)
+INSERT INTO admin_bdys.temp_final_localities (locality_pid, geom)
 SELECT locality_pid,
        (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_Simplify(geom, 0.00002), 0.00001))))).geom
-  FROM admin_bdys.temp_final_localities;
+  FROM admin_bdys.locality_bdys_display_full_res;
 
-DELETE FROM admin_bdys.temp_final_localities2 WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
+DELETE FROM admin_bdys.temp_final_localities WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
 
 
 -- insert grouped polygons into final table
@@ -312,8 +315,6 @@ CREATE TABLE admin_bdys.locality_bdys_display
   CONSTRAINT localities_display_pk PRIMARY KEY (locality_pid)
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.locality_bdys_display OWNER TO postgres;
-CREATE INDEX localities_display_geom_idx ON admin_bdys.locality_bdys_display USING gist (geom);
-ALTER TABLE admin_bdys.locality_bdys_display CLUSTER ON localities_display_geom_idx;
 
 INSERT INTO admin_bdys.locality_bdys_display(locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565 
 SELECT loc.locality_pid,
@@ -328,18 +329,20 @@ SELECT loc.locality_pid,
   INNER JOIN (
     SELECT locality_pid,
            ST_Multi(ST_Union(geom)) AS geom
-      FROM admin_bdys.temp_final_localities2
+      FROM admin_bdys.temp_final_localities
       GROUP by locality_pid
   ) AS bdy
   ON loc.locality_pid = bdy.locality_pid;
+
+CREATE INDEX localities_display_geom_idx ON admin_bdys.locality_bdys_display USING gist (geom);
+ALTER TABLE admin_bdys.locality_bdys_display CLUSTER ON localities_display_geom_idx;
 
 ANALYZE admin_bdys.locality_bdys_display;
 
 
 -- clean up
 DROP TABLE IF EXISTS admin_bdys.temp_holes_split_locs;
-DROP TABLE IF EXISTS admin_bdys.temp_final_localities2;
---DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
+DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
 DROP TABLE IF EXISTS admin_bdys.temp_hole_localities;
 DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
 DROP TABLE IF EXISTS admin_bdys.temp_holes;
@@ -348,6 +351,7 @@ DROP TABLE IF EXISTS admin_bdys.temp_states;
 DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
 DROP TABLE IF EXISTS admin_bdys.temp_hole_splitter_lines;
 DROP TABLE IF EXISTS admin_bdys.temp_holes_split;
+DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers_subdivided;
 DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers;
 DROP TABLE IF EXISTS admin_bdys.temp_state_lines;
 DROP TABLE IF EXISTS admin_bdys.temp_localities;

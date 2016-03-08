@@ -9,6 +9,9 @@ SELECT '| ' || loc.locality_pid || ' | ' || loc.locality_name || ' | ' || COALES
            loc.postcode;
 
 
+-- select Count(*) from admin_bdys.locality_bdys -- 15574
+-- select Count(*) from admin_bdys.locality_bdys_display -- 15574
+
 
 
 -- QA bad polygons
@@ -17,7 +20,7 @@ SELECT '| ' || loc.locality_pid || ' | ' || loc.locality_name || ' | ' || COALES
 
 --select * from admin_bdys.locality_bdys_display where ST_IsEmpty(geom); -- 0
 
--- select * from admin_bdys.temp_final_localities where NOT ST_IsValid(geom); -- 0
+-- select * from admin_bdys.locality_bdys_display_full_res where NOT ST_IsValid(geom); -- 0
 -- select * from admin_bdys.locality_bdys_display where NOT ST_IsValid(geom); -- 0
 
 
