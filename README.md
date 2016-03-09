@@ -6,6 +6,8 @@ A Python script for creating a clean version of the Suburb-Locality boundaries f
 
 Trims the boundaries to the coastline; fixes state border overlaps and gaps; and thins the boundaries for faster display performance in desktop GIS tools and in browsers.
 
+This process takes ~30-45 mins
+
 ![aus.png](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/aus.png "clean vs original localities")
 
 Coastline improvements
@@ -23,7 +25,7 @@ A better dataset for processing is the admin_bdys.locality_bdy_analysis table th
 
 ### I Just Want the Data!
 
-You can run the script to get the result (in ~2 hours) or just download the data from here:
+You can run the script to get the result or just download the data from here:
 - [Shapefile](https://github.com/iag-geo/psma-admin-bdys/releases/download/v1.0/locality_bdys_display_shapefile.zip) (~40Mb) 
 - [GeoJSON](https://github.com/iag-geo/psma-admin-bdys/releases/download/v1.0/locality_bdys_display_geojson.zip) (~25Mb) 
 
