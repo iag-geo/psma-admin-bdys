@@ -6,7 +6,7 @@ A Python script for creating a clean version of the Suburb-Locality boundaries f
 
 Trims the boundaries to the coastline; fixes state border overlaps and gaps; and thins the boundaries for faster display performance in desktop GIS tools and in browsers.
 
-This process takes ~30-45 mins
+This process takes ~30-45 mins.
 
 ![aus.png](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/aus.png "clean vs original localities")
 
