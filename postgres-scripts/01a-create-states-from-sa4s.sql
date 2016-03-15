@@ -1,20 +1,6 @@
 
 -- create a state boundary table from sa4s (it looks visually better than the PSMA states table due to issues around bays e.g. Botany Bay, NSW) - 5 mins
 
-DROP VIEW IF EXISTS raw_admin_bdys.sa4s;
-CREATE VIEW raw_admin_bdys.sa4s AS
-SELECT tab.sa4_11code,
-       tab.sa4_11name,
-       tab.gcc_11code,
-       tab.gcc_11name,
-       ste.st_abbrev AS state,
-       area_sqm AS area,
-       bdy.geom
-  FROM raw_admin_bdys.aus_sa4_2011_polygon AS bdy
-  INNER JOIN raw_admin_bdys.aus_sa4_2011 AS tab ON bdy.sa4_11pid = tab.sa4_11pid
-  INNER JOIN raw_admin_bdys.aus_state AS ste ON tab.state_pid = ste.state_pid;
-
-
 -- dissolve polygons for each state -- 2 mins -- 6725 
 DROP TABLE IF EXISTS admin_bdys.temp_states;
 CREATE UNLOGGED TABLE admin_bdys.temp_states
@@ -34,7 +20,7 @@ INSERT INTO admin_bdys.temp_states (state, geom)
     SELECT state, ST_Union(ST_MakePolygon(geom)) As geom
     FROM (
         SELECT state, ST_ExteriorRing((ST_Dump(geom)).geom) As geom
-        FROM raw_admin_bdys.sa4s
+        FROM admin_bdys.abs_2011_sa4
         ) s
     GROUP BY state
   ) AS sqt;
