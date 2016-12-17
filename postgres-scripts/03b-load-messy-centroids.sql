@@ -1,5 +1,5 @@
 
--- Create manully created list of points to do the final selection of messy polygons
+-- Create manually created list of points to do the final selection of messy polygons
 DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
 CREATE TABLE admin_bdys.temp_messy_centroids (
     gid integer NOT NULL,
@@ -8,12 +8,13 @@ CREATE TABLE admin_bdys.temp_messy_centroids (
     state_gid integer NOT NULL,
     latitude numeric(10,8),
     longitude numeric(11,8),
-    geom public.geometry(Point,4283)
+    geom public.geometry(Point,4283) NOT NULL
 );
 ALTER TABLE admin_bdys.temp_messy_centroids OWNER TO postgres;
 
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (1, 'QLD3164', 999999, 999999, NULL, NULL, '0101000020BB10000063AE45564D97624041EE67F83C7934C0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (2, 'SA246', 99999, 99999, NULL, NULL, '0101000020BB100000E59143DF282F6140120ECCC8A03241C0');
+INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (3, 'NSW2517', 4476, 1578, NULL, NULL, '0101000020BB1000006C3C5D5E56E562402F58AA624EBC40C0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (695, 'QLD1456', 14998, 5884, -27.80265836, 153.37813085, '0101000020BB1000007A4BDEA5192C63409D0FAE047BCD3BC0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (813, 'VIC2407', 3020, 6724, -38.23143600, 144.64108739, '0101000020BB100000B2BDB3C983146240FC8EE1B19F1D43C0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (1213, 'WA2505', 12153, 1471, -32.59379105, 115.79497855, '0101000020BB1000006051B6EDE0F25C4029345A58014C40C0');

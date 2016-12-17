@@ -1,3 +1,12 @@
+### Change Log - November 2016 Release
+- Logging is now written to locality-clean.log in your local repo directory as well as to the console 
+- Added `--psma-version` to the parameters. Represents the PSMA version number in YYYYMM format and is used to add a suffix to the default schema names. Defaults to current year and latest release month. e.g. `201611`. Valid values are `<year>02` `<year>05` `<year>08` `<year>11`, and is based on the PSMA quarterly release months 
+- All default schema names are now suffixed with `--psma-version` to avoid clashes with previous versions. e.g. `gnaf_201611`
+- locality-clean.py now works with Python 2.7 and Python 3.5
+- locality-clean.py has been successfully tested on Postgres 9.6 and PostGIS 2.3
+    - Note: Limited performance testing on Postgres 9.6 has shown setting the maximum number of parallel processes `--max-processes` to 3 is the most efficient value on non-SSD machines
+- Code has been refactored to simplify it a bit and move some common functions to a new psma.py file
+
 # psma-admin-bdys
 Some utils to make it easier to use the PSMA's Administrative Boundaries
 
@@ -11,7 +20,6 @@ This process takes ~30-45 mins.
 ![aus.png](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/aus.png "clean vs original localities")
 
 Coastline improvements
-
 
 ![border-comparison](https://github.com/iag-geo/psma-admin-bdys/blob/master/sample-images/border-comparison.png "clean vs original borders")
 
@@ -36,9 +44,9 @@ Incorporates or developed using Administrative Boundaries ©PSMA Australia Limit
 ### Script Pre-requisites
 
 - You will need to run the [gnaf-loader](https://github.com/minus34/gnaf-loader) script to load the required Admin Bdy tables into Postgres
-- Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 on OSX)
+- Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 & 9.6 on OSX)
 - PostGIS 2.1+
-- Python 2.7 with Psycopg2 2.6
+- Python 2.7 or 3.5 with Psycopg2 2.6
 
 ### Missing localities
 Trimming the boundaries to the coastline removes a small number of bay or estuary based localities.  These have very few G-NAF addresses.
@@ -50,7 +58,7 @@ These localities are:
 | NSW524 | BOTANY BAY | 2019 | NSW | 1 | 12 | 
 | NSW2046 | JERVIS BAY |  | NSW | 0 | 5 | 
 | NSW2275 | LAKE MACQUARIE |  | NSW | 1 | 67 | 
-| NSW2627 | MIDDLE HARBOUR | 2087 | NSW | 3 | 22 | 
+| NSW2627 | MIDDLE HARBOUR | 2087 | NSW | 3 | 23 | 
 | NSW3019 | NORTH HARBOUR |  | NSW | 0 | 11 | 
 | NSW3255 | PITTWATER | 2108 | NSW | 5 | 31 | 
 | NT26 | BEAGLE GULF |  | NT | 0 | 0 | 
