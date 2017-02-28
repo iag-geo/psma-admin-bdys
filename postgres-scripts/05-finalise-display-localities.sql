@@ -16,10 +16,10 @@ SELECT ste.new_gid,
 DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
 CREATE TABLE admin_bdys.temp_holes_distinct (
   hole_gid serial NOT NULL PRIMARY KEY,
-  state character varying(3) NOT NULL,
+  state text NOT NULL,
   geom geometry(Polygon,4283) NOT NULL,
-  locality_pid character varying(16),
-  match_type character varying(16)
+  locality_pid text,
+  match_type text
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_holes_distinct OWNER TO postgres;
 CREATE INDEX temp_holes_distinct_geom_idx ON admin_bdys.temp_holes_distinct USING gist (geom);
@@ -106,7 +106,7 @@ CREATE TABLE admin_bdys.temp_hole_points
 (
   gid serial NOT NULL PRIMARY KEY,
   hole_gid integer NOT NULL,
-  state character varying(3) NOT NULL,
+  state text NOT NULL,
   geom geometry(Point,4283) NOT NULL
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_hole_points OWNER TO postgres;
@@ -183,9 +183,9 @@ CREATE TABLE admin_bdys.temp_holes_split
 (
   gid serial NOT NULL PRIMARY KEY,
   hole_gid integer NOT NULL,
-  locality_pid character varying(16) NULL,
-  state character varying(3) NOT NULL,
-  type varchar(50) NOT NULL,
+  locality_pid text NULL,
+  state text NOT NULL,
+  type text NOT NULL,
   geom geometry(Polygon,4283) NOT NULL
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_holes_split OWNER TO postgres;
@@ -266,7 +266,7 @@ UPDATE admin_bdys.temp_split_localities
 -- merge final polygons -- 3 mins -- 15565  
 DROP TABLE IF EXISTS admin_bdys.locality_bdys_display_full_res;
 CREATE TABLE admin_bdys.locality_bdys_display_full_res (
-  locality_pid character varying(16) PRIMARY KEY,
+  locality_pid text PRIMARY KEY,
   geom geometry(MultiPolygon, 4283),
   area numeric(20,3)
 ) WITH (OIDS=FALSE);
@@ -286,7 +286,7 @@ ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_disp
 -- simplify and clean up data, removing unwanted artifacts -- 1 min -- 17731 
 DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
 CREATE TABLE admin_bdys.temp_final_localities (
-  locality_pid character varying(16),
+  locality_pid text,
   geom geometry
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_final_localities OWNER TO postgres;
@@ -304,11 +304,11 @@ DROP TABLE IF EXISTS admin_bdys.locality_bdys_display;
 CREATE TABLE admin_bdys.locality_bdys_display
 (
   gid serial NOT NULL,
-  locality_pid character varying(16) NOT NULL,
-  locality_name character varying(100) NOT NULL,
-  postcode character(4) NULL,
-  state character varying(3) NOT NULL,
-  locality_class character varying(50) NOT NULL,
+  locality_pid text NOT NULL,
+  locality_name text NOT NULL,
+  postcode text NULL,
+  state text NOT NULL,
+  locality_class text NOT NULL,
   address_count integer NOT NULL,
   street_count integer NOT NULL,
   geom geometry(MultiPolygon,4283) NOT NULL,

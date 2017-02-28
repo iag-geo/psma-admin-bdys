@@ -4,8 +4,8 @@ DROP TABLE IF EXISTS admin_bdys.temp_localities;
 CREATE UNLOGGED TABLE admin_bdys.temp_localities
 (
   gid serial NOT NULL,
-  locality_pid varchar(16),
-  state character varying(3) NOT NULL,
+  locality_pid text,
+  state text NOT NULL,
   geom geometry(Polygon,4283) NOT NULL,
   area float NULL
 )
@@ -30,11 +30,11 @@ ANALYZE admin_bdys.temp_localities;
 DROP TABLE IF EXISTS admin_bdys.temp_split_localities;
 CREATE TABLE admin_bdys.temp_split_localities (
   gid integer NOT NULL,
-  locality_pid varchar(16) NOT NULL,
-  loc_state varchar(3) NOT NULL,
+  locality_pid text NOT NULL,
+  loc_state text NOT NULL,
   state_gid integer NULL,
-  ste_state varchar(3) NOT NULL,
-  match_type varchar(50),
+  ste_state text NOT NULL,
+  match_type text,
   geom geometry(Polygon,4283) NOT NULL, area float NULL
 )WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_split_localities OWNER TO postgres;
@@ -48,8 +48,8 @@ DROP TABLE IF EXISTS admin_bdys.temp_holes;
 CREATE TABLE admin_bdys.temp_holes(
   gid serial NOT NULL,
   state_gid integer NOT NULL,
-  locality_pid varchar(16) NULL,
-  state character varying(3) NOT NULL,
+  locality_pid text NULL,
+  state text NOT NULL,
   geom geometry(Polygon,4283) NOT NULL
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_holes OWNER TO postgres;
