@@ -59,11 +59,15 @@ def main():
     pg_conn.autocommit = True
     pg_cur = pg_conn.cursor()
 
+    # log postgres/postgis versions being used
+    psma.check_postgis_version(pg_cur, settings, logger)
+
     # add Postgres functions to clean out non-polygon geometries from GeometryCollections
     pg_cur.execute(psma.open_sql_file("create-polygon-intersection-function.sql", settings))
     pg_cur.execute(psma.open_sql_file("create-multi-linestring-split-function.sql", settings))
 
     # let's build some clean localities!
+    logger.info("")
     create_states_and_prep_localities(settings)
     get_split_localities(pg_cur, settings)
     verify_locality_polygons(pg_cur, settings)
@@ -335,6 +339,7 @@ if __name__ == '__main__':
 
     logger.info("")
     logger.info("Start locality-clean")
+    psma.check_python_version(logger)
 
     if main():
         logger.info("Finished successfully!")
