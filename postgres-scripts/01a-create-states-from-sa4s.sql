@@ -69,7 +69,7 @@ SELECT state,
 -- merge where they overlap, ignore the coastlines -- 22
 DROP TABLE IF EXISTS admin_bdys.temp_borders_2;
 SELECT ste1.state || '-' || ste2.state AS state,
-       ST_Union(ST_Intersection(ste1.geom, ste2.geom)) AS geom
+       ST_Union(PolygonalIntersection(ste1.geom, ste2.geom)) AS geom
   INTO TEMPORARY TABLE temp_borders_2
   FROM temp_borders AS ste1
   INNER JOIN temp_borders AS ste2
@@ -89,7 +89,7 @@ ALTER TABLE admin_bdys.temp_state_border_buffers OWNER TO postgres;
 
 INSERT INTO admin_bdys.temp_state_border_buffers (state, geom)
 SELECT ste2.state,
-       (ST_Dump(ST_Intersection(ste1.geom, ste2.geom))).geom
+       (ST_Dump(PolygonalIntersection(ste1.geom, ste2.geom))).geom
   FROM temp_borders_2 AS ste1
   INNER JOIN admin_bdys.temp_states AS ste2
   ON ST_Intersects(ste1.geom, ste2.geom);

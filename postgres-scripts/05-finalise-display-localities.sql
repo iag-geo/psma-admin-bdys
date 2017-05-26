@@ -94,7 +94,7 @@ SELECT DISTINCT *
     SELECT loc.locality_pid,
            hol.hole_gid,
            hol.state,
-           (ST_DumpPoints(ST_Intersection(loc.geom, hol.geom))).geom::geometry(Point, 4283) AS geom
+           (ST_DumpPoints(PolygonalIntersection(loc.geom, hol.geom))).geom::geometry(Point, 4283) AS geom
       FROM admin_bdys.temp_split_localities AS loc
       INNER JOIN admin_bdys.temp_holes_distinct AS hol ON (ST_Intersects(loc.geom, hol.geom) AND loc.loc_state = hol.state)
       INNER JOIN admin_bdys.temp_hole_localities AS lochol ON hol.hole_gid = lochol.hole_gid
@@ -211,7 +211,7 @@ DROP TABLE IF EXISTS admin_bdys.temp_holes_split_locs;
 SELECT hol.gid,
        loc.locality_pid,
        hol.state,
-       ST_Length(ST_Boundary(ST_Intersection(hol.geom, loc.geom))) AS dist
+       ST_Length(ST_Boundary(PolygonalIntersection(hol.geom, loc.geom))) AS dist
   INTO admin_bdys.temp_holes_split_locs
   FROM admin_bdys.temp_holes_split AS hol
   INNER JOIN admin_bdys.temp_split_localities AS loc
