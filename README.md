@@ -1,4 +1,4 @@
-### Change Log - February 2017 Release
+### Change Log - February, May 2017 Releases
 - No changes
 ### Change Log - November 2016 Release
 - Logging is now written to locality-clean.log in your local repo directory as well as to the console 
