@@ -1,7 +1,7 @@
 
 -- create a state boundary table from sa4s (it looks visually better than the PSMA states table due to issues around bays e.g. Botany Bay, NSW) - 5 mins
 
--- dissolve polygons for each state -- 2 mins -- 6725
+-- dissolve polygons for each state -- 2 mins -- 6725 
 DROP TABLE IF EXISTS admin_bdys.temp_states;
 CREATE UNLOGGED TABLE admin_bdys.temp_states
 (
@@ -34,7 +34,7 @@ ALTER TABLE admin_bdys.temp_states CLUSTER ON temp_states_geom_idx;
 ANALYZE admin_bdys.temp_states;
 
 
--- create states as lines -- 6728
+-- create states as lines -- 6728 
 DROP TABLE IF EXISTS admin_bdys.temp_state_lines;
 CREATE TABLE admin_bdys.temp_state_lines(
   gid SERIAL NOT NULL,
@@ -59,7 +59,7 @@ ANALYZE admin_bdys.temp_state_lines;
 
 -- create state borders as buffers -- 2 min
 
--- create buffered borders -- 4538
+-- create buffered borders -- 4538 
 DROP TABLE IF EXISTS temp_borders;
 SELECT state,
        (ST_Dump(ST_Buffer(ST_Simplify(geom, 0.001), 0.015, 1))).geom AS geom
@@ -125,3 +125,7 @@ CREATE INDEX temp_state_border_buffers_subdivided_geom_idx ON admin_bdys.temp_st
 ALTER TABLE admin_bdys.temp_state_border_buffers_subdivided CLUSTER ON temp_state_border_buffers_subdivided_geom_idx;
 
 ANALYZE admin_bdys.temp_state_border_buffers_subdivided;
+
+
+
+
