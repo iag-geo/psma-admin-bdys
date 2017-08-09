@@ -45,10 +45,8 @@ def main():
 
     # set command line arguments
     args = set_arguments()
-    print(args)
     # get settings from arguments
     settings = get_settings(args)
-    print(settings)
     # connect to Postgres
     try:
         pg_conn = psycopg2.connect(settings['pg_connect_string'])
