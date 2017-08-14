@@ -26,7 +26,7 @@ CREATE INDEX temp_holes_distinct_geom_idx ON admin_bdys.temp_holes_distinct USIN
 ALTER TABLE admin_bdys.temp_holes_distinct CLUSTER ON temp_holes_distinct_geom_idx;
 
 INSERT INTO admin_bdys.temp_holes_distinct (state, geom) -- 13192 -- 15458 
-SELECT state, ST_MakeValid(ST_Buffer((ST_Dump(ST_Union(ST_Buffer(ST_Buffer(geom, -0.00000001), 0.00000002)))).geom, 0.0))
+SELECT state, ST_MakeValid(ST_Buffer((ST_Dump(ST_Union(ST_Buffer(ST_Buffer(geom, -0.00000002), 0.00000002)))).geom, 0.0))
   FROM admin_bdys.temp_holes
   GROUP BY state;
 

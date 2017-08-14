@@ -45,10 +45,8 @@ def main():
 
     # set command line arguments
     args = set_arguments()
-
     # get settings from arguments
     settings = get_settings(args)
-
     # connect to Postgres
     try:
         pg_conn = psycopg2.connect(settings['pg_connect_string'])
@@ -127,7 +125,9 @@ def set_arguments():
         '--admin-schema', default='admin_bdys_' + psma_version,
         help='Destination schema name to store final admin boundary tables in. Defaults to \'admin_bdys_'
              + psma_version + '\'.')
-
+    parser.add_argument(
+        '--sa4-boundary-table', default='abs_2016_sa4',
+        help='SA4 table name used to create state boundaries. Defaults to \'abs_2016_sa4\'. Other options are: \'abs_2011_sa4\'')
     # output directory
     parser.add_argument(
         '--output-path', required=True,
@@ -144,6 +144,7 @@ def get_settings(args):
     settings['psma_version'] = args.psma_version
     settings['gnaf_schema'] = args.gnaf_schema
     settings['admin_bdys_schema'] = args.admin_schema
+    settings['sa4_boundary_table'] = args.sa4_boundary_table
     settings['output_path'] = args.output_path
 
     # create postgres connect string

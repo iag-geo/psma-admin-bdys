@@ -20,7 +20,7 @@ INSERT INTO admin_bdys.temp_states (state, geom)
     SELECT state, ST_Union(ST_MakePolygon(geom)) As geom
     FROM (
         SELECT state, ST_ExteriorRing((ST_Dump(geom)).geom) As geom
-        FROM admin_bdys.abs_2011_sa4
+        FROM admin_bdys.sa4_boundary_table
         ) s
     GROUP BY state
   ) AS sqt;

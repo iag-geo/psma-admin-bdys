@@ -91,6 +91,8 @@ def prep_sql(sql, settings):
         sql = sql.replace(" gnaf.", " {0}.".format(settings['gnaf_schema'], ))
     if settings['admin_bdys_schema'] is not None:
         sql = sql.replace(" admin_bdys.", " {0}.".format(settings['admin_bdys_schema'], ))
+    if settings['sa4_boundary_table'] is not None:
+        sql = sql.replace(".sa4_boundary_table", ".{0}".format(settings['sa4_boundary_table'], ))
 
     if settings['pg_user'] != "postgres":
         # alter create table script to run with correct Postgres user name
