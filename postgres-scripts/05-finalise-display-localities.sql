@@ -264,7 +264,7 @@ UPDATE admin_bdys.temp_split_localities
 
 
 -- merge final polygons -- 3 mins -- 15565  
-DROP TABLE IF EXISTS admin_bdys.locality_bdys_display_full_res;
+DROP TABLE IF EXISTS admin_bdys.locality_bdys_display_full_res CASCADE;
 CREATE TABLE admin_bdys.locality_bdys_display_full_res (
   locality_pid text PRIMARY KEY,
   geom geometry(MultiPolygon, 4283),
@@ -300,7 +300,7 @@ DELETE FROM admin_bdys.temp_final_localities WHERE ST_GeometryType(geom) <> 'ST_
 
 
 -- insert grouped polygons into final table
-DROP TABLE IF EXISTS admin_bdys.locality_bdys_display;
+DROP TABLE IF EXISTS admin_bdys.locality_bdys_display CASCADE;
 CREATE TABLE admin_bdys.locality_bdys_display
 (
   gid serial NOT NULL,
