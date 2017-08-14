@@ -1,3 +1,6 @@
+### Change Log - August 2017 Release
+- Locality boundaries are now trimmed to the coastline using ABS Census 2016 SA4 boundaries
+- To use the ABS Census 2011 SA4 table as per before - supply the following argument: `--sa4-boundary-table abs_2011_sa4`
 ### Change Log - February, May 2017 Releases
 - No changes
 ### Change Log - November 2016 Release
