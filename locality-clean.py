@@ -103,7 +103,7 @@ def set_arguments():
     parser.add_argument(
         '--pgdb',
         help='Database name for Postgres server. Defaults to PGDATABASE environment variable if set, '
-             'otherwise psma.')
+             'otherwise geo.')
     parser.add_argument(
         '--pguser',
         help='Username for Postgres server. Defaults to PGUSER environment variable if set, otherwise postgres.')
@@ -119,15 +119,13 @@ def set_arguments():
         '--psma-version', default=psma_version,
         help='PSMA Version number as YYYYMM. Defaults to last release year and month \'' + psma_version + '\'.')
     parser.add_argument(
-        '--gnaf-schema', default='gnaf_' + psma_version,
-        help='Destination schema name to store final GNAF tables in. Defaults to \'gnaf_' + psma_version + '\'.')
-    parser.add_argument(
         '--admin-schema', default='admin_bdys_' + psma_version,
         help='Destination schema name to store final admin boundary tables in. Defaults to \'admin_bdys_'
              + psma_version + '\'.')
     parser.add_argument(
         '--sa4-boundary-table', default='abs_2016_sa4',
-        help='SA4 table name used to create state boundaries. Defaults to \'abs_2016_sa4\'. Other options are: \'abs_2011_sa4\'')
+        help='SA4 table name used to create state boundaries. '
+             'Defaults to \'abs_2016_sa4\'. Other options are: \'abs_2011_sa4\'')
     # output directory
     parser.add_argument(
         '--output-path', required=True,
@@ -142,7 +140,7 @@ def get_settings(args):
 
     settings['max_concurrent_processes'] = args.max_processes
     settings['psma_version'] = args.psma_version
-    settings['gnaf_schema'] = args.gnaf_schema
+    settings['gnaf_schema'] = None  # dummy setting required to make psma.py utilities universal with the gnaf-laoder
     settings['admin_bdys_schema'] = args.admin_schema
     settings['sa4_boundary_table'] = args.sa4_boundary_table
     settings['output_path'] = args.output_path
@@ -150,7 +148,7 @@ def get_settings(args):
     # create postgres connect string
     settings['pg_host'] = args.pghost or os.getenv("PGHOST", "localhost")
     settings['pg_port'] = args.pgport or os.getenv("PGPORT", 5432)
-    settings['pg_db'] = args.pgdb or os.getenv("PGDATABASE", "psma")
+    settings['pg_db'] = args.pgdb or os.getenv("PGDATABASE", "geo")
     settings['pg_user'] = args.pguser or os.getenv("PGUSER", "postgres")
     settings['pg_password'] = args.pgpassword or os.getenv("PGPASSWORD", "password")
 
