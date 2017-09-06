@@ -283,23 +283,66 @@ CREATE INDEX localities_display_full_res_geom_idx ON admin_bdys.locality_bdys_di
 ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_display_full_res_geom_idx;
 
 
--- simplify and clean up data, removing unwanted artifacts -- 1 min -- 17731 
-DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
-CREATE TABLE admin_bdys.temp_final_localities (
-  locality_pid text,
-  geom geometry
-) WITH (OIDS=FALSE);
-ALTER TABLE admin_bdys.temp_final_localities OWNER TO postgres;
+-- -- simplify and clean up data, removing unwanted artifacts -- 1 min -- 17731  -- OLD METHOD
+-- DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
+-- CREATE TABLE admin_bdys.temp_final_localities (
+--   locality_pid text,
+--   geom geometry
+-- ) WITH (OIDS=FALSE);
+-- ALTER TABLE admin_bdys.temp_final_localities OWNER TO postgres;
+--
+-- INSERT INTO admin_bdys.temp_final_localities (locality_pid, geom)
+-- SELECT locality_pid,
+--        (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_Simplify(geom, 0.00002), 0.00001))))).geom
+--   FROM admin_bdys.locality_bdys_display_full_res;
+--
+-- DELETE FROM admin_bdys.temp_final_localities WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
 
-INSERT INTO admin_bdys.temp_final_localities (locality_pid, geom)
-SELECT locality_pid,
-       (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_Simplify(geom, 0.00002), 0.00001))))).geom
-  FROM admin_bdys.locality_bdys_display_full_res;
 
-DELETE FROM admin_bdys.temp_final_localities WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
+-- -- insert grouped polygons into final table -- OLD METHOD
+-- DROP TABLE IF EXISTS admin_bdys.locality_bdys_display CASCADE;
+-- CREATE TABLE admin_bdys.locality_bdys_display
+-- (
+--   gid serial NOT NULL,
+--   locality_pid text NOT NULL,
+--   locality_name text NOT NULL,
+--   postcode text NULL,
+--   state text NOT NULL,
+--   locality_class text NOT NULL,
+--   address_count integer NOT NULL,
+--   street_count integer NOT NULL,
+--   geom geometry(MultiPolygon,4283) NOT NULL,
+--   CONSTRAINT localities_display_pk PRIMARY KEY (locality_pid)
+-- ) WITH (OIDS=FALSE);
+-- ALTER TABLE admin_bdys.locality_bdys_display OWNER TO postgres;
+--
+-- INSERT INTO admin_bdys.locality_bdys_display(locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565
+-- SELECT loc.locality_pid,
+--        loc.locality_name,
+--        loc.postcode,
+--        loc.state,
+--        loc.locality_class,
+--        loc.address_count,
+--        loc.street_count,
+--        bdy.geom
+--   FROM admin_bdys.locality_bdys AS loc
+--   INNER JOIN (
+--     SELECT locality_pid,
+--            ST_Multi(ST_Union(geom)) AS geom
+--       FROM admin_bdys.temp_final_localities
+--       GROUP by locality_pid
+--   ) AS bdy
+--   ON loc.locality_pid = bdy.locality_pid;
+--
+-- CREATE INDEX localities_display_geom_idx ON admin_bdys.locality_bdys_display USING gist (geom);
+-- ALTER TABLE admin_bdys.locality_bdys_display CLUSTER ON localities_display_geom_idx;
+--
+-- ANALYZE admin_bdys.locality_bdys_display;
 
 
--- insert grouped polygons into final table
+-- set role postgres;
+
+-- insert grouped polygons into final table - using VW simplification instead!
 DROP TABLE IF EXISTS admin_bdys.locality_bdys_display CASCADE;
 CREATE TABLE admin_bdys.locality_bdys_display
 (
@@ -312,32 +355,41 @@ CREATE TABLE admin_bdys.locality_bdys_display
   address_count integer NOT NULL,
   street_count integer NOT NULL,
   geom geometry(MultiPolygon,4283) NOT NULL,
-  CONSTRAINT localities_display_pk PRIMARY KEY (locality_pid)
+  CONSTRAINT locality_bdys_display_pk PRIMARY KEY (locality_pid)
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.locality_bdys_display OWNER TO postgres;
 
-INSERT INTO admin_bdys.locality_bdys_display(locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565 
-SELECT loc.locality_pid,
-       loc.locality_name,
-       loc.postcode,
-       loc.state,
-       loc.locality_class,
-       loc.address_count,
-       loc.street_count,
-       bdy.geom
-  FROM admin_bdys.locality_bdys AS loc
-  INNER JOIN (
-    SELECT locality_pid,
-           ST_Multi(ST_Union(geom)) AS geom
-      FROM admin_bdys.temp_final_localities
-      GROUP by locality_pid
-  ) AS bdy
-  ON loc.locality_pid = bdy.locality_pid;
+ALTER TABLE admin_bdys.locality_bdys_display
+  OWNER TO rw;
+GRANT ALL ON TABLE admin_bdys.locality_bdys_display TO rw;
+GRANT SELECT ON TABLE admin_bdys.locality_bdys_display TO readonly;
+GRANT SELECT ON TABLE admin_bdys.locality_bdys_display TO metacentre;
+GRANT SELECT ON TABLE admin_bdys.locality_bdys_display TO ro;
+GRANT ALL ON TABLE admin_bdys.locality_bdys_display TO update;
 
-CREATE INDEX localities_display_geom_idx ON admin_bdys.locality_bdys_display USING gist (geom);
-ALTER TABLE admin_bdys.locality_bdys_display CLUSTER ON localities_display_geom_idx;
+INSERT INTO admin_bdys.locality_bdys_display(locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565
+  SELECT loc.locality_pid,
+    loc.locality_name,
+    loc.postcode,
+    loc.state,
+    loc.locality_class,
+    loc.address_count,
+    loc.street_count,
+    bdy.geom
+  FROM admin_bdys.locality_bdys AS loc
+    INNER JOIN (
+                 SELECT locality_pid,
+                   ST_Multi(ST_Union(ST_MakeValid(ST_SimplifyVW(geom, 9.208633852887194e-09)))) AS geom
+                 FROM admin_bdys.locality_bdys_display_full_res
+                 GROUP by locality_pid
+               ) AS bdy
+      ON loc.locality_pid = bdy.locality_pid;
+
+CREATE INDEX locality_bdys_display_geom_idx ON admin_bdys.locality_bdys_display USING gist (geom);
+ALTER TABLE admin_bdys.locality_bdys_display CLUSTER ON locality_bdys_display_geom_idx;
 
 ANALYZE admin_bdys.locality_bdys_display;
+
 
 
 -- clean up
