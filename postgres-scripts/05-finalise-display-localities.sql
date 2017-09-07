@@ -293,7 +293,7 @@ ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_disp
 --
 -- INSERT INTO admin_bdys.temp_final_localities (locality_pid, geom)
 -- SELECT locality_pid,
---        (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_Simplify(geom, 0.00002), 0.00001))))).geom
+--        (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_SimplifyVW(geom, 9.208633852887194e-09), 0.00001))))).geom
 --   FROM admin_bdys.locality_bdys_display_full_res;
 --
 -- DELETE FROM admin_bdys.temp_final_localities WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
@@ -314,7 +314,15 @@ ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_disp
 --   geom geometry(MultiPolygon,4283) NOT NULL,
 --   CONSTRAINT localities_display_pk PRIMARY KEY (locality_pid)
 -- ) WITH (OIDS=FALSE);
--- ALTER TABLE admin_bdys.locality_bdys_display OWNER TO postgres;
+--
+-- ALTER TABLE admin_bdys.locality_bdys_display
+--   OWNER TO rw;
+-- GRANT ALL ON TABLE admin_bdys.locality_bdys_display TO rw;
+-- GRANT SELECT ON TABLE admin_bdys.locality_bdys_display TO readonly;
+-- GRANT SELECT ON TABLE admin_bdys.locality_bdys_display TO metacentre;
+-- GRANT SELECT ON TABLE admin_bdys.locality_bdys_display TO ro;
+-- GRANT ALL ON TABLE admin_bdys.locality_bdys_display TO update;
+--
 --
 -- INSERT INTO admin_bdys.locality_bdys_display(locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565
 -- SELECT loc.locality_pid,
@@ -357,7 +365,6 @@ CREATE TABLE admin_bdys.locality_bdys_display
   geom geometry(MultiPolygon,4283) NOT NULL,
   CONSTRAINT locality_bdys_display_pk PRIMARY KEY (locality_pid)
 ) WITH (OIDS=FALSE);
-ALTER TABLE admin_bdys.locality_bdys_display OWNER TO postgres;
 
 ALTER TABLE admin_bdys.locality_bdys_display
   OWNER TO rw;
