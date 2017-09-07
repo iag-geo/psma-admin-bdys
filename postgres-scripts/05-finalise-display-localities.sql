@@ -293,7 +293,7 @@ ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_disp
 
  INSERT INTO admin_bdys.temp_final_localities (locality_pid, geom)
  SELECT locality_pid,
-        (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_SimplifyVW(geom, 9.208633852887194e-09), 0.00005))))).geom
+        (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_SimplifyVW(geom, 9.208633852887194e-09), 0.00001))))).geom
    FROM admin_bdys.locality_bdys_display_full_res;
 
  DELETE FROM admin_bdys.temp_final_localities WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
