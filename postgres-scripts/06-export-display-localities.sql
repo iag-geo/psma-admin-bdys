@@ -6,4 +6,4 @@ SELECT gid, locality_pid AS loc_pid,
   address_count AS adr_count,
   street_count AS str_count,
   geom
-FROM admin_bdys.locality_bdys_display_vw;
+FROM admin_bdys.locality_bdys_display;
