@@ -9,12 +9,17 @@ SELECT Count(*) as num_points FROM (
   FROM admin_bdys_201708.locality_bdys_display_full_res
 ) AS sqt;
 
--- number of points - thinned localities
+-- number of points - thinned localities -- 4,376,869 (15%)
 SELECT Count(*) as num_points FROM (
   SELECT (ST_DumpPoints(geom)).geom as geom
   FROM admin_bdys_201708.locality_bdys_display
 ) AS sqt;
 
+-- number of points - test localities -- 4,353,375 -- MEH!
+SELECT Count(*) as num_points FROM (
+  SELECT (ST_DumpPoints(ST_RemoveRepeatedPoints(ST_Simplify(geom, 0.00001), 0.00001))).geom as geom
+  FROM admin_bdys_201708.locality_bdys_display_full_res
+) AS sqt;
 
 
 

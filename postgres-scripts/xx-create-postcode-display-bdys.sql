@@ -2,10 +2,11 @@
 -- merge locality polygons -- 3 mins --
 DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display_full_res CASCADE;
 CREATE TABLE admin_bdys_201708.postcode_bdys_display_full_res (
-  postcode character(4) PRIMARY KEY,
+  postcode character(4),
   state text NOT NULL,
   geom geometry(MultiPolygon, 4283),
-  area numeric(20,3)
+  area numeric(20,3),
+  CONSTRAINT postcode_bdys_display_full_res_pk PRIMARY KEY (postcode, state)
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys_201708.postcode_bdys_display_full_res OWNER TO postgres;
 

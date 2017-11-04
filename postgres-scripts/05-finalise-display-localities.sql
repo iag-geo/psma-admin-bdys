@@ -267,22 +267,33 @@ UPDATE admin_bdys.temp_split_localities
 DROP TABLE IF EXISTS admin_bdys.locality_bdys_display_full_res CASCADE;
 CREATE TABLE admin_bdys.locality_bdys_display_full_res (
   locality_pid text PRIMARY KEY,
+  locality_name text,
+  postcode character(4),
+  state text,
   geom geometry(MultiPolygon, 4283),
   area numeric(20,3)
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.locality_bdys_display_full_res OWNER TO postgres;
 
-INSERT INTO admin_bdys.locality_bdys_display_full_res (locality_pid, geom) 
-SELECT locality_pid,
-       ST_Multi(ST_Buffer(ST_Buffer(ST_Union(geom), -0.00000001), 0.00000001))
-  FROM admin_bdys.temp_split_localities
-  WHERE match_type <> 'SPLIT'
-  GROUP BY locality_pid;
+INSERT INTO admin_bdys.locality_bdys_display_full_res (locality_pid, locality_name, postcode, state, geom)
+SELECT tmp.locality_pid,
+       loc.locality_name,
+       loc.postcode,
+       loc.state,
+       ST_Multi(ST_Buffer(ST_Buffer(ST_Union(tmp.geom), -0.00000001), 0.00000001))
+  FROM admin_bdys.temp_split_localities AS tmp
+  INNER JOIN admin_bdys.locality_bdys AS loc
+  ON tmp.locality_pid = loc.locality_pid
+  WHERE tmp.match_type <> 'SPLIT'
+  GROUP BY tmp.locality_pid,
+		loc.locality_name,
+	  loc.postcode,
+    loc.state;
 
 CREATE INDEX localities_display_full_res_geom_idx ON admin_bdys.locality_bdys_display_full_res USING gist (geom);
 ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_display_full_res_geom_idx;
 
-ANALYZE admin_bdys_201708.locality_bdys_display_full_res;
+ANALYZE admin_bdys.locality_bdys_display_full_res;
 
 
  -- simplify and clean up data, removing unwanted artifacts -- 1 min -- 17731  -- OLD METHOD
