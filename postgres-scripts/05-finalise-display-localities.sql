@@ -282,6 +282,8 @@ SELECT locality_pid,
 CREATE INDEX localities_display_full_res_geom_idx ON admin_bdys.locality_bdys_display_full_res USING gist (geom);
 ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_display_full_res_geom_idx;
 
+ANALYZE admin_bdys_201708.locality_bdys_display_full_res;
+
 
  -- simplify and clean up data, removing unwanted artifacts -- 1 min -- 17731  -- OLD METHOD
  DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
@@ -312,7 +314,7 @@ ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_disp
    address_count integer NOT NULL,
    street_count integer NOT NULL,
    geom geometry(MultiPolygon,4283) NOT NULL,
-   CONSTRAINT localities_display_pk PRIMARY KEY (locality_pid)
+   CONSTRAINT locality_bdys_display_pk PRIMARY KEY (locality_pid)
  ) WITH (OIDS=FALSE);
  ALTER TABLE admin_bdys.locality_bdys_display
    OWNER TO postgres;

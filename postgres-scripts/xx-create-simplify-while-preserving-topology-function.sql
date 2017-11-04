@@ -1,3 +1,8 @@
+
+
+-- HS note: this doesn't scale to PSMA localities - it never finishes!
+
+
 -- Simplify the given table of multipolygon with the given tolerance.
 -- This function preserves the connection between polygons and try to avoid generating gaps between objects.
 -- To identify objects after simplification, area comparison is performed, instead of PIP test, that may fail
