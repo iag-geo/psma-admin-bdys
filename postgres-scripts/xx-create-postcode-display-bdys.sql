@@ -70,16 +70,34 @@ ANALYZE admin_bdys_201708.postcode_bdys_display_full_res;
         state,
         SUM(address_count),
         SUM(street_count),
-        ST_Multi(ST_Union(geom)) AS geom
+        ST_Multi(ST_MakeValid(ST_Union(ST_MakeValid(ST_Buffer(geom, 0.000001))))) AS geom
+--         ST_Multi(ST_MakeValid(ST_MakePolygon(ST_Boundary(ST_Union(ST_MakeValid(ST_Buffer(geom, 0.000001))))))) AS geom
    FROM admin_bdys_201708.locality_bdys_display AS loc
+   WHERE postcode IS NOT NULL
+   AND postcode <> 'NA'
 	 GROUP by postcode,
 		 state;
 
- CREATE INDEX localities_display_geom_idx ON admin_bdys_201708.postcode_bdys_display USING gist (geom);
- ALTER TABLE admin_bdys_201708.postcode_bdys_display CLUSTER ON localities_display_geom_idx;
+ CREATE INDEX postcode_bdys_display_geom_idx ON admin_bdys_201708.postcode_bdys_display USING gist (geom);
+ ALTER TABLE admin_bdys_201708.postcode_bdys_display CLUSTER ON postcode_bdys_display_geom_idx;
 
  ANALYZE admin_bdys_201708.postcode_bdys_display;
+-- 
+-- WITH polygons AS (
+-- 
+-- )
+-- 
+-- 
+-- ST_MakePolygon(ST_Boundary(
 
+
+
+
+
+
+
+
+select Count(*) from admin_bdys_201708.postcode_bdys_display;
 
 
 --  INSERT INTO admin_bdys_201708.postcode_bdys_display(postcode, state, address_count, street_count, geom) -- 15565
