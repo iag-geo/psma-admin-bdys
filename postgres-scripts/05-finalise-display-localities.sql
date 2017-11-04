@@ -414,20 +414,18 @@ ANALYZE admin_bdys.locality_bdys_display_full_res;
 --
 --ANALYZE admin_bdys.locality_bdys_display;
 
-
---
----- clean up
---DROP TABLE IF EXISTS admin_bdys.temp_holes_split_locs;
---DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
---DROP TABLE IF EXISTS admin_bdys.temp_hole_localities;
---DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
---DROP TABLE IF EXISTS admin_bdys.temp_holes;
---DROP TABLE IF EXISTS admin_bdys.temp_split_localities;
---DROP TABLE IF EXISTS admin_bdys.temp_states;
---DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
---DROP TABLE IF EXISTS admin_bdys.temp_hole_splitter_lines;
---DROP TABLE IF EXISTS admin_bdys.temp_holes_split;
---DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers_subdivided;
---DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers;
---DROP TABLE IF EXISTS admin_bdys.temp_state_lines;
---DROP TABLE IF EXISTS admin_bdys.temp_localities;
+-- clean up
+DROP TABLE IF EXISTS admin_bdys.temp_holes_split_locs;
+DROP TABLE IF EXISTS admin_bdys.temp_final_localities;
+DROP TABLE IF EXISTS admin_bdys.temp_hole_localities;
+DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
+DROP TABLE IF EXISTS admin_bdys.temp_holes;
+DROP TABLE IF EXISTS admin_bdys.temp_split_localities;
+DROP TABLE IF EXISTS admin_bdys.temp_states;
+DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
+DROP TABLE IF EXISTS admin_bdys.temp_hole_splitter_lines;
+DROP TABLE IF EXISTS admin_bdys.temp_holes_split;
+DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers_subdivided;
+DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers;
+DROP TABLE IF EXISTS admin_bdys.temp_state_lines;
+DROP TABLE IF EXISTS admin_bdys.temp_localities;
