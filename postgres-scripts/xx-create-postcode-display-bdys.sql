@@ -1,20 +1,20 @@
 
--- merge locality polygons -- 3 mins --
+-- merge locality polygons --  mins --
 DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display_full_res CASCADE;
 CREATE TABLE admin_bdys_201708.postcode_bdys_display_full_res (
+	gid serial PRIMARY KEY,
   postcode character(4),
   state text NOT NULL,
   geom geometry(MultiPolygon, 4283),
-  area numeric(20,3),
-  CONSTRAINT postcode_bdys_display_full_res_pk PRIMARY KEY (postcode, state)
+  area numeric(20,3)
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys_201708.postcode_bdys_display_full_res OWNER TO postgres;
 
 INSERT INTO admin_bdys_201708.postcode_bdys_display_full_res (postcode, state, geom)
 SELECT postcode,
        state,
-       ST_Multi(ST_Buffer(ST_Buffer(ST_Union(geom), -0.00000001), 0.00000001))
-  FROM admin_bdys.postcode_bdys_display_full_res
+       ST_Multi(ST_Buffer(ST_Buffer(ST_Union(ST_MakeValid(geom)), -0.00000001), 0.00000001))
+  FROM admin_bdys_201708.locality_bdys_display_full_res
   GROUP BY postcode,
     state;
 
@@ -46,13 +46,12 @@ ANALYZE admin_bdys_201708.postcode_bdys_display_full_res;
  DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display CASCADE;
  CREATE TABLE admin_bdys_201708.postcode_bdys_display
  (
-   gid serial NOT NULL,
+   gid serial PRIMARY KEY,
    postcode character(4) NULL,
    state text NOT NULL,
    address_count integer NOT NULL,
    street_count integer NOT NULL,
-   geom geometry(MultiPolygon,4283) NOT NULL,
-   CONSTRAINT postcode_bdys_display_pk PRIMARY KEY (postcode, state)
+   geom geometry(MultiPolygon,4283) NOT NULL
  ) WITH (OIDS=FALSE);
  ALTER TABLE admin_bdys_201708.postcode_bdys_display
    OWNER TO postgres;
@@ -67,21 +66,40 @@ ANALYZE admin_bdys_201708.postcode_bdys_display_full_res;
 
 
  INSERT INTO admin_bdys_201708.postcode_bdys_display(postcode, state, address_count, street_count, geom) -- 15565
- SELECT loc.postcode,
-        loc.state,
-        SUM(loc.address_count),
-        SUM(loc.street_count),
-        bdy.geom
-   FROM admin_bdys_201708.postcode_bdys AS loc
-   INNER JOIN (
-     SELECT locality_pid,
-            ST_Multi(ST_Union(geom)) AS geom
-       FROM admin_bdys.temp_final_postcodes
-       GROUP by locality_pid
-   ) AS bdy
-   ON loc.locality_pid = bdy.locality_pid;
+ SELECT postcode,
+        state,
+        SUM(address_count),
+        SUM(street_count),
+        ST_Multi(ST_Union(geom)) AS geom
+   FROM admin_bdys_201708.locality_bdys_display AS loc
+	 GROUP by postcode,
+		 state;
 
  CREATE INDEX localities_display_geom_idx ON admin_bdys_201708.postcode_bdys_display USING gist (geom);
  ALTER TABLE admin_bdys_201708.postcode_bdys_display CLUSTER ON localities_display_geom_idx;
 
  ANALYZE admin_bdys_201708.postcode_bdys_display;
+
+
+
+--  INSERT INTO admin_bdys_201708.postcode_bdys_display(postcode, state, address_count, street_count, geom) -- 15565
+--  SELECT loc.postcode,
+--         loc.state,
+--         SUM(loc.address_count),
+--         SUM(loc.street_count),
+--         bdy.geom
+--    FROM admin_bdys_201708.postcode_bdys AS loc
+--    INNER JOIN (
+--      SELECT postcode,
+-- 						state,
+--             ST_Multi(ST_Union(geom)) AS geom
+--        FROM admin_bdys_201708.postcode_bdys_display
+--        GROUP by postcode,
+-- 			   state
+--    ) AS bdy
+--    ON loc.locality_pid = bdy.locality_pid;
+-- 
+--  CREATE INDEX localities_display_geom_idx ON admin_bdys_201708.postcode_bdys_display USING gist (geom);
+--  ALTER TABLE admin_bdys_201708.postcode_bdys_display CLUSTER ON localities_display_geom_idx;
+-- 
+--  ANALYZE admin_bdys_201708.postcode_bdys_display;

@@ -263,7 +263,7 @@ UPDATE admin_bdys.temp_split_localities
   WHERE ST_Intersects(ST_SetSRID(ST_MakePoint(144.227305683, -9.39107887741), 4283), geom);
 
 
--- merge final polygons -- 3 mins -- 15565  
+-- merge final polygons -- 26 mins -- 15565
 DROP TABLE IF EXISTS admin_bdys.locality_bdys_display_full_res CASCADE;
 CREATE TABLE admin_bdys.locality_bdys_display_full_res (
   locality_pid text PRIMARY KEY,
@@ -280,7 +280,7 @@ SELECT tmp.locality_pid,
        loc.locality_name,
        loc.postcode,
        loc.state,
-       ST_Multi(ST_Buffer(ST_Buffer(ST_Union(tmp.geom), -0.00000001), 0.00000001))
+       ST_Multi(ST_MakeValid(ST_Buffer(ST_Buffer(ST_Union(ST_MakeValid(tmp.geom)), -0.00000001), 0.00000001)))
   FROM admin_bdys.temp_split_localities AS tmp
   INNER JOIN admin_bdys.locality_bdys AS loc
   ON tmp.locality_pid = loc.locality_pid
