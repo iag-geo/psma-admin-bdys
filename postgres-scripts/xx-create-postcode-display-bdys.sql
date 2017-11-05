@@ -92,35 +92,108 @@ ANALYZE admin_bdys_201708.postcode_bdys_display_full_res;
 
 
 -- step 1 - merge localities into postcode and remove all slivers and islands (polygon islands that is, not Great Keppel Island)
-DROP TABLE IF EXISTS admin_bdys_201708.test;
+DROP TABLE IF EXISTS admin_bdys_201708.temp_postcodes;
 SELECT postcode,
        state,
        SUM(address_count) AS address_count,
        SUM(street_count) AS street_count,
        ST_MakePolygon(ST_ExteriorRing((ST_Dump(ST_MakeValid(ST_Union(ST_MakeValid(ST_Buffer(geom, 0.000001)))))).geom)) AS geom
-	 INTO admin_bdys_201708.test
+	 INTO admin_bdys_201708.temp_postcodes
    FROM admin_bdys_201708.locality_bdys_display AS loc
    WHERE postcode IS NOT NULL
    AND postcode <> 'NA'
 	 GROUP by postcode,
 		 state;
 
--- step 2 remove areas within polygon covered by different postcodes (e.g. QLD 4712 is within QLD 4702)
-DROP TABLE IF EXISTS admin_bdys_201708.test2;
+ANALYZE admin_bdys_201708.temp_postcodes;
+
+
+-- step 2 - get all postcodes within other postcodes
+DROP TABLE IF EXISTS admin_bdys_201708.temp_postcode_cookies;
+SELECT loc1.postcode,
+       ST_Multi(ST_Union(loc2.geom)) as geom
+	 INTO admin_bdys_201708.temp_postcode_cookies
+   FROM admin_bdys_201708.temp_postcodes AS loc1
+   INNER JOIN admin_bdys_201708.temp_postcodes AS loc2
+   ON ST_Contains(loc1.geom, loc2.geom)
+   AND loc1.postcode <> loc2.postcode
+   GROUP BY loc1.postcode;
+
+ANALYZE admin_bdys_201708.temp_postcode_cookies;
+
+
+-- step 3 - remove areas within postcodes covered by different postcodes (e.g. QLD 4712 is within QLD 4702)
+UPDATE admin_bdys_201708.temp_postcodes AS pc
+	SET geom = ST_Difference(pc.geom, ck.geom)
+	FROM admin_bdys_201708.temp_postcode_cookies AS ck
+  WHERE ST_Intersects(pc.geom, ck.geom)
+  AND pc.postcode = ck.postcode;
+
+-- 
+-- DROP TABLE IF EXISTS admin_bdys_201708.temp_final_postcodes;
+-- SELECT postcode,
+--        state,
+--        address_count,
+--        street_count,
+--        CASE
+--          WHEN ck.geom IS NOT NULL AND pc.geom IS NOT NULL THEN ST_Difference(pc.geom, ck.geom)
+--          WHEN pc.geom IS NULL THEN ck.geom
+--          ELSE pc.geom
+--        END AS geom
+-- 	 INTO admin_bdys_201708.temp_final_postcodes
+--    FROM admin_bdys_201708.temp_postcodes AS pc
+--    FULL OUTER JOIN admin_bdys_201708.temp_postcode_cookies AS ck
+--    ON ST_Intersects(pc.geom, ck.geom);
+-- 
+-- ANALYZE admin_bdys_201708.temp_final_postcodes;
+
+
+
+DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display CASCADE;
+ CREATE TABLE admin_bdys_201708.postcode_bdys_display
+ (
+   gid serial PRIMARY KEY,
+   postcode character(4) NULL,
+   state text NOT NULL,
+   address_count integer NOT NULL,
+   street_count integer NOT NULL,
+   geom geometry(MultiPolygon,4283) NOT NULL
+ ) WITH (OIDS=FALSE);
+ ALTER TABLE admin_bdys_201708.postcode_bdys_display
+   OWNER TO postgres;
+
+INSERT INTO admin_bdys_201708.postcode_bdys_display(postcode, state, address_count, street_count, geom) -- 15565
+ SELECT postcode,
+        state,
+        address_count,
+        SUM(street_count),
+        ST_Multi(ST_MakeValid(ST_Union(ST_MakeValid(ST_Buffer(geom, 0.000001))))) AS geom
+--         ST_Multi(ST_MakeValid(ST_MakePolygon(ST_Boundary(ST_Union(ST_MakeValid(ST_Buffer(geom, 0.000001))))))) AS geom
+   FROM admin_bdys_201708.locality_bdys_display AS loc
+   WHERE postcode IS NOT NULL
+   AND postcode <> 'NA'
+	 GROUP by postcode,
+		 state;
+
+ CREATE INDEX postcode_bdys_display_geom_idx ON admin_bdys_201708.postcode_bdys_display USING gist (geom);
+ ALTER TABLE admin_bdys_201708.postcode_bdys_display CLUSTER ON postcode_bdys_display_geom_idx;
+
+ ANALYZE admin_bdys_201708.postcode_bdys_display;
+
+
+-- step 4 - add localities with NULL postcodes
 SELECT ST_Multi(ST_Union(loc2.geom)) AS geom
-	 INTO admin_bdys_201708.test2
-   FROM admin_bdys_201708.test AS loc1
-   INNER JOIN admin_bdys_201708.test AS loc2
+	 INTO admin_bdys_201708.temp_postcode_cookies
+   FROM admin_bdys_201708.temp_postcodes AS loc1
+   INNER JOIN admin_bdys_201708.temp_postcodes AS loc2
    ON ST_Contains(loc1.geom, loc2.geom)
    AND loc1.postcode <> loc2.postcode
 --    AND loc1.state <> loc2.state
 
 
--- WON'T WORK - too random!
--- step 3 - assign postcodes to NULL postcode loaclities based on the highest number of bordering localities with that postcode
 
 
--- step 3 add NULL postcode localites.
+
 
 
 
