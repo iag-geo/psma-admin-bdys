@@ -91,7 +91,21 @@ ANALYZE admin_bdys_201708.postcode_bdys_display_full_res;
 -- ST_MakePolygon(ST_Boundary(
 
 
+-- step 1 - merge localities into postcode and remove all slivers and islands (polygon islands that is, not Great Keppel Island)
+DROP TABLE IF EXISTS admin_bdys_201708.test;
+SELECT postcode,
+        state,
+        SUM(address_count) AS address_count,
+        SUM(street_count) AS street_count,
+        ST_MakePolygon(ST_ExteriorRing((ST_Dump(ST_MakeValid(ST_Union(ST_MakeValid(ST_Buffer(geom, 0.000001)))))).geom)) AS geom
+	 INTO admin_bdys_201708.test
+   FROM admin_bdys_201708.locality_bdys_display AS loc
+   WHERE postcode IS NOT NULL
+   AND postcode <> 'NA'
+	 GROUP by postcode,
+		 state;
 
+		
 
 
 
