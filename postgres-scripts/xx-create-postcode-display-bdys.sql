@@ -107,17 +107,13 @@ SELECT postcode,
 
 -- step 2 remove areas within polygon covered by different postcodes (e.g. QLD 4712 is within QLD 4702)
 DROP TABLE IF EXISTS admin_bdys_201708.test2;
-SELECT loc1.postcode,
-       loc1.state,
-       loc1.address_count,
-       loc1.street_count,
-       ST_Difference(loc1.geom, loc2.geom) AS geom
+SELECT ST_Multi(ST_Union(loc2.geom)) AS geom
 	 INTO admin_bdys_201708.test2
    FROM admin_bdys_201708.test AS loc1
    INNER JOIN admin_bdys_201708.test AS loc2
    ON ST_Contains(loc1.geom, loc2.geom)
    AND loc1.postcode <> loc2.postcode
-   AND loc1.state <> loc2.state
+--    AND loc1.state <> loc2.state
 
 
 -- WON'T WORK - too random!
