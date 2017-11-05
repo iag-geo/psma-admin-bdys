@@ -105,8 +105,15 @@ SELECT postcode,
 	 GROUP by postcode,
 		 state;
 
-		
+-- step 2 remove areas within polygon covered by different postcodes (e.g. QLD 4712 is within QLD 4702)
 
+
+
+-- WON'T WORK - too random!
+-- step 3 - assign postcodes to NULL postcode loaclities based on the highest number of bordering localities with that postcode
+
+
+-- step 3 add NULL postcode localites.
 
 
 
