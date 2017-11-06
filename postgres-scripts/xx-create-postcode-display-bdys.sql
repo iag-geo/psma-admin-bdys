@@ -52,7 +52,7 @@ SELECT postcode,
 	 INTO admin_bdys_201708.temp_postcodes
    FROM admin_bdys_201708.locality_bdys_display AS loc
    WHERE postcode IS NOT NULL
-   AND postcode <> 'NA'
+   AND postcode NOT IN ('NA', '9999')
 	 GROUP by postcode,
 		 state;
 
@@ -117,19 +117,45 @@ UPDATE admin_bdys_201708.temp_null_postcodes AS pc
   WHERE ST_Intersects(pc.geom, ck.geom);
 
 
- -- step 7 - insert grouped polygons into final table --
- DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display;
- CREATE TABLE admin_bdys_201708.postcode_bdys_display
- (
-   gid serial PRIMARY KEY,
-   postcode character(4) NULL,
-   state text NOT NULL,
+-- step 7 - remove NULL areas within postcodes
+
+
+-- step 8 insert into one table and remove unwanted artifacts
+DROP TABLE IF EXISTS admin_bdys_201708.temp_final_postcodes;
+CREATE TABLE admin_bdys_201708.temp_final_postcodes (
+  postcode character(4) NULL,
+  state text NOT NULL,
+  geom geometry
+) WITH (OIDS=FALSE);
+ALTER TABLE admin_bdys_201708.temp_final_postcodes OWNER TO postgres;
+
+INSERT INTO admin_bdys_201708.temp_final_postcodes (postcode, state, geom)
+SELECT postcode,
+  state,
+  (ST_Dump(ST_MakeValid(ST_Multi(geom)))).geom AS geom
+FROM admin_bdys_201708.temp_postcodes;
+
+INSERT INTO admin_bdys_201708.temp_final_postcodes (postcode, state, geom)
+  SELECT NULL,
+    state,
+    (ST_Dump(ST_MakeValid(ST_Multi(geom)))).geom AS geom
+  FROM admin_bdys_201708.temp_null_postcodes;
+
+DELETE FROM admin_bdys_201708.temp_final_postcodes WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
+
+-- step 8 - insert grouped polygons into final table --
+DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display;
+CREATE TABLE admin_bdys_201708.postcode_bdys_display
+(
+  gid serial PRIMARY KEY,
+  postcode character(4) NULL,
+  state text NOT NULL,
 --    address_count integer NOT NULL,
 --    street_count integer NOT NULL,
-   geom geometry(MultiPolygon,4283) NOT NULL
- ) WITH (OIDS=FALSE);
- ALTER TABLE admin_bdys_201708.postcode_bdys_display
-   OWNER TO postgres;
+  geom geometry(MultiPolygon,4283) NOT NULL
+) WITH (OIDS=FALSE);
+ALTER TABLE admin_bdys_201708.postcode_bdys_display
+  OWNER TO postgres;
 
 -- ALTER TABLE admin_bdys_201708.postcode_bdys_display
 --   OWNER TO rw;
@@ -141,21 +167,21 @@ UPDATE admin_bdys_201708.temp_null_postcodes AS pc
 
 INSERT INTO admin_bdys_201708.postcode_bdys_display(postcode, state, geom) -- 15565
 SELECT postcode,
-        state,
---         address_count,
---         street_count,
-        ST_Multi(ST_Union(geom)) AS geom
-  FROM admin_bdys_201708.temp_postcodes AS loc
+       state,
+       ST_Multi(ST_Union(geom)) AS geom
+  FROM admin_bdys_201708.temp_final_postcodes
+  WHERE postcode IS NOT NULL
+  AND postcode NOT IN ('NA', '9999')
 	GROUP by postcode,
 		state;
--- 		address_count,
--- 		street_count;
 
--- step 8 - insert NULL postcode areas, ungrouped
+-- step 9 - insert NULL postcode areas, ungrouped
 INSERT INTO admin_bdys_201708.postcode_bdys_display(state, geom) -- 15565
 SELECT state,
        ST_Multi(geom) AS geoms
-  FROM admin_bdys_201708.temp_null_postcodes AS loc;
+  FROM admin_bdys_201708.temp_final_postcodes
+  WHERE postcode IS NULL
+  OR postcode IN ('NA', '9999');
 
 CREATE INDEX postcode_bdys_display_geom_idx ON admin_bdys_201708.postcode_bdys_display USING gist (geom);
 ALTER TABLE admin_bdys_201708.postcode_bdys_display CLUSTER ON postcode_bdys_display_geom_idx;
@@ -165,10 +191,9 @@ ANALYZE admin_bdys_201708.postcode_bdys_display;
 select Count(*) from admin_bdys_201708.postcode_bdys_display;
 
 
-
 -- clean up temp tables
-DROP TABLE admin_bdys_201708.temp_postcodes;
-DROP TABLE admin_bdys_201708.temp_postcode_cookies;
-DROP TABLE admin_bdys_201708.temp_null_postcodes;
-DROP TABLE admin_bdys_201708.temp_null_postcode_cookies;
-
+DROP TABLE IF EXISTS admin_bdys_201708.temp_postcodes;
+DROP TABLE IF EXISTS admin_bdys_201708.temp_postcode_cookies;
+DROP TABLE IF EXISTS admin_bdys_201708.temp_null_postcodes;
+DROP TABLE IF EXISTS admin_bdys_201708.temp_null_postcode_cookies;
+DROP TABLE IF EXISTS admin_bdys_201708.temp_final_postcodes;
