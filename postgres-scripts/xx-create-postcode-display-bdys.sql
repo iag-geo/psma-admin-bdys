@@ -104,7 +104,6 @@ SELECT loc2.state,
    FROM admin_bdys_201708.temp_postcodes AS loc1
    INNER JOIN admin_bdys_201708.temp_null_postcodes AS loc2
    ON ST_Within(loc1.geom, loc2.geom)
---    AND loc1.postcode <> loc2.postcode
    GROUP BY loc2.state;
 
 ANALYZE admin_bdys_201708.temp_null_postcode_cookies;
@@ -118,6 +117,9 @@ UPDATE admin_bdys_201708.temp_null_postcodes AS pc
 
 
 -- step 7 - remove NULL areas within postcodes
+DELETE FROM admin_bdys_201708.temp_null_postcodes AS nl
+  USING admin_bdys_201708.temp_postcodes AS pc
+  WHERE ST_Contains(pc.geom, nl.geom);
 
 
 -- step 8 insert into one table and remove unwanted artifacts
@@ -143,7 +145,8 @@ INSERT INTO admin_bdys_201708.temp_final_postcodes (postcode, state, geom)
 
 DELETE FROM admin_bdys_201708.temp_final_postcodes WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
 
--- step 8 - insert grouped polygons into final table --
+
+-- step 9 - insert grouped polygons into final table --
 DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display;
 CREATE TABLE admin_bdys_201708.postcode_bdys_display
 (
@@ -175,7 +178,7 @@ SELECT postcode,
 	GROUP by postcode,
 		state;
 
--- step 9 - insert NULL postcode areas, ungrouped
+-- insert NULL postcode areas, ungrouped
 INSERT INTO admin_bdys_201708.postcode_bdys_display(state, geom) -- 15565
 SELECT state,
        ST_Multi(geom) AS geoms
