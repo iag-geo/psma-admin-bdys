@@ -46,8 +46,8 @@
 DROP TABLE IF EXISTS admin_bdys_201708.temp_postcodes;
 SELECT postcode,
        state,
-       SUM(address_count) AS address_count,
-       SUM(street_count) AS street_count,
+--        SUM(address_count) AS address_count,
+--        SUM(street_count) AS street_count,
        ST_MakePolygon(ST_ExteriorRing((ST_Dump(ST_MakeValid(ST_Union(ST_MakeValid(ST_Buffer(geom, 0.000001)))))).geom)) AS geom
 	 INTO admin_bdys_201708.temp_postcodes
    FROM admin_bdys_201708.locality_bdys_display AS loc
@@ -81,7 +81,43 @@ UPDATE admin_bdys_201708.temp_postcodes AS pc
   AND pc.postcode = ck.postcode;
 
 
- -- insert grouped polygons into final table -- OLD METHOD
+-- step 4 - create merged NULLS
+DROP TABLE IF EXISTS admin_bdys_201708.temp_null_postcodes;
+SELECT state,
+--        SUM(address_count) AS address_count,
+--        SUM(street_count) AS street_count,
+       ST_MakePolygon(ST_ExteriorRing((ST_Dump(ST_MakeValid(ST_Union(ST_MakeValid(ST_Buffer(geom, 0.000001)))))).geom)) AS geom
+	 INTO admin_bdys_201708.temp_null_postcodes
+   FROM admin_bdys_201708.locality_bdys_display AS loc
+   WHERE postcode IS NULL
+   OR postcode IN ('NA', '9999')
+	 GROUP BY state;
+
+ANALYZE admin_bdys_201708.temp_null_postcodes;
+
+
+-- step 5 - get all postcodes within NULL areas
+DROP TABLE IF EXISTS admin_bdys_201708.temp_null_postcode_cookies;
+SELECT loc1.postcode,
+       ST_Multi(ST_Union(loc2.geom)) as geom
+	 INTO admin_bdys_201708.temp_postcode_null_cookies
+   FROM admin_bdys_201708.temp_postcodes AS loc1
+   INNER JOIN admin_bdys_201708.temp_null_postcode_cookies AS loc2
+   ON ST_Within(loc1.geom, loc2.geom)
+--    AND loc1.postcode <> loc2.postcode
+   GROUP BY loc1.postcode;
+
+ANALYZE admin_bdys_201708.temp_null_postcode_cookies;
+
+
+-- step 6 - remove areas within NULL areas covered by postcodes
+UPDATE admin_bdys_201708.temp_null_postcodes AS pc
+	SET geom = ST_Difference(pc.geom, ck.geom)
+	FROM admin_bdys_201708.temp_null_postcode_cookies AS ck
+  WHERE ST_Intersects(pc.geom, ck.geom);
+
+
+ -- insert grouped polygons into final table --
  DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display CASCADE;
  CREATE TABLE admin_bdys_201708.postcode_bdys_display
  (
