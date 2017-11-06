@@ -117,7 +117,7 @@ UPDATE admin_bdys_201708.temp_null_postcodes AS pc
   WHERE ST_Intersects(pc.geom, ck.geom);
 
 
- -- insert grouped polygons into final table --
+ -- step 7 - insert grouped polygons into final table --
  DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display;
  CREATE TABLE admin_bdys_201708.postcode_bdys_display
  (
@@ -145,18 +145,25 @@ SELECT postcode,
 --         address_count,
 --         street_count,
         ST_Multi(ST_Union(geom)) AS geom
-  FROM admin_bdys_201708.tmep_postcodes AS loc
+  FROM admin_bdys_201708.temp_postcodes AS loc
 	GROUP by postcode,
 		state;
 -- 		address_count,
 -- 		street_count;
 
+-- step 8 - insert NULL postcode areas, ungrouped
 INSERT INTO admin_bdys_201708.postcode_bdys_display(state, geom) -- 15565
 SELECT state,
-       ST_Multi(geom) AS geom
-  FROM admin_bdys_201708.tmep_null_postcodes AS loc
-	GROUP by postcode,
-		state;
+       ST_Multi(geom) AS geoms
+  FROM admin_bdys_201708.temp_null_postcodes AS loc;
+
+CREATE INDEX postcode_bdys_display_geom_idx ON admin_bdys_201708.postcode_bdys_display USING gist (geom);
+ALTER TABLE admin_bdys_201708.postcode_bdys_display CLUSTER ON postcode_bdys_display_geom_idx;
+
+ANALYZE admin_bdys_201708.postcode_bdys_display;
+
+select Count(*) from admin_bdys_201708.postcode_bdys_display;
+
 
 
 -- clean up temp tables
@@ -165,25 +172,3 @@ DROP TABLE admin_bdys_201708.temp_postcode_cookies;
 DROP TABLE admin_bdys_201708.temp_null_postcodes;
 DROP TABLE admin_bdys_201708.temp_null_postcode_cookies;
 
--- step 4 - add localities with NULL postcodes, ungrouped
-SELECT ST_Multi(ST_Union(loc2.geom)) AS geom
-	 INTO admin_bdys_201708.temp_postcode_cookies
-   FROM admin_bdys_201708.temp_postcodes AS loc1
-   INNER JOIN admin_bdys_201708.temp_postcodes AS loc2
-   ON ST_Contains(loc1.geom, loc2.geom)
-   AND loc1.postcode <> loc2.postcode
---    AND loc1.state <> loc2.state
-
-
-
-
-
-
-
-
-CREATE INDEX postcode_bdys_display_geom_idx ON admin_bdys_201708.postcode_bdys_display USING gist (geom);
-ALTER TABLE admin_bdys_201708.postcode_bdys_display CLUSTER ON postcode_bdys_display_geom_idx;
-
-ANALYZE admin_bdys_201708.postcode_bdys_display;
-
-select Count(*) from admin_bdys_201708.postcode_bdys_display;
