@@ -98,14 +98,14 @@ ANALYZE admin_bdys_201708.temp_null_postcodes;
 
 -- step 5 - get all postcodes within NULL areas
 DROP TABLE IF EXISTS admin_bdys_201708.temp_null_postcode_cookies;
-SELECT loc1.postcode,
-       ST_Multi(ST_Union(loc2.geom)) as geom
-	 INTO admin_bdys_201708.temp_postcode_null_cookies
+SELECT loc2.state,
+       ST_Multi(ST_Union(loc1.geom)) as geom
+	 INTO admin_bdys_201708.temp_null_postcode_cookies
    FROM admin_bdys_201708.temp_postcodes AS loc1
-   INNER JOIN admin_bdys_201708.temp_null_postcode_cookies AS loc2
+   INNER JOIN admin_bdys_201708.temp_null_postcodes AS loc2
    ON ST_Within(loc1.geom, loc2.geom)
 --    AND loc1.postcode <> loc2.postcode
-   GROUP BY loc1.postcode;
+   GROUP BY loc2.state;
 
 ANALYZE admin_bdys_201708.temp_null_postcode_cookies;
 
