@@ -118,14 +118,14 @@ UPDATE admin_bdys_201708.temp_null_postcodes AS pc
 
 
  -- insert grouped polygons into final table --
- DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display CASCADE;
+ DROP TABLE IF EXISTS admin_bdys_201708.postcode_bdys_display;
  CREATE TABLE admin_bdys_201708.postcode_bdys_display
  (
    gid serial PRIMARY KEY,
    postcode character(4) NULL,
    state text NOT NULL,
-   address_count integer NOT NULL,
-   street_count integer NOT NULL,
+--    address_count integer NOT NULL,
+--    street_count integer NOT NULL,
    geom geometry(MultiPolygon,4283) NOT NULL
  ) WITH (OIDS=FALSE);
  ALTER TABLE admin_bdys_201708.postcode_bdys_display
@@ -139,23 +139,31 @@ UPDATE admin_bdys_201708.temp_null_postcodes AS pc
 -- GRANT SELECT ON TABLE admin_bdys_201708.postcode_bdys_display TO ro;
 -- GRANT ALL ON TABLE admin_bdys_201708.postcode_bdys_display TO update;
 
-INSERT INTO admin_bdys_201708.postcode_bdys_display(postcode, state, address_count, street_count, geom) -- 15565
+INSERT INTO admin_bdys_201708.postcode_bdys_display(postcode, state, geom) -- 15565
 SELECT postcode,
         state,
-        address_count,
-        street_count,
+--         address_count,
+--         street_count,
         ST_Multi(ST_Union(geom)) AS geom
   FROM admin_bdys_201708.tmep_postcodes AS loc
 	GROUP by postcode,
-		state,
-		address_count,
-		street_count;
+		state;
+-- 		address_count,
+-- 		street_count;
+
+INSERT INTO admin_bdys_201708.postcode_bdys_display(state, geom) -- 15565
+SELECT state,
+       ST_Multi(geom) AS geom
+  FROM admin_bdys_201708.tmep_null_postcodes AS loc
+	GROUP by postcode,
+		state;
 
 
 -- clean up temp tables
 DROP TABLE admin_bdys_201708.temp_postcodes;
 DROP TABLE admin_bdys_201708.temp_postcode_cookies;
-
+DROP TABLE admin_bdys_201708.temp_null_postcodes;
+DROP TABLE admin_bdys_201708.temp_null_postcode_cookies;
 
 -- step 4 - add localities with NULL postcodes, ungrouped
 SELECT ST_Multi(ST_Union(loc2.geom)) AS geom
