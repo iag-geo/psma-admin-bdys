@@ -1,62 +1,8 @@
--- 
--- -- merge locality polygons --  mins --
--- DROP TABLE IF EXISTS admin_bdys.postcode_bdys_display_full_res CASCADE;
--- CREATE TABLE admin_bdys.postcode_bdys_display_full_res (
--- 	gid serial PRIMARY KEY,
---   postcode character(4),
---   state text NOT NULL,
---   geom geometry(MultiPolygon, 4283),
---   area numeric(20,3)
--- ) WITH (OIDS=FALSE);
--- ALTER TABLE admin_bdys.postcode_bdys_display_full_res OWNER TO postgres;
--- 
--- INSERT INTO admin_bdys.postcode_bdys_display_full_res (postcode, state, geom)
--- SELECT postcode,
---        state,
---        ST_Multi(ST_Buffer(ST_Buffer(ST_Union(ST_MakeValid(geom)), -0.00000001), 0.00000001))
---   FROM admin_bdys.locality_bdys_display_full_res
---   GROUP BY postcode,
---     state;
--- 
--- CREATE INDEX postcode_bdys_display_full_res_geom_idx ON admin_bdys.postcode_bdys_display_full_res USING gist (geom);
--- ALTER TABLE admin_bdys.postcode_bdys_display_full_res CLUSTER ON postcode_bdys_display_full_res_geom_idx;
--- 
--- ANALYZE admin_bdys.postcode_bdys_display_full_res;
--- 
--- 
---  -- simplify and clean up data, removing unwanted artifacts -- 1 min -- 17731  -- OLD METHOD
---  DROP TABLE IF EXISTS admin_bdys.temp_final_postcodes;
---  CREATE TABLE admin_bdys.temp_final_postcodes (
---    postcode character(4),
---    state text NOT NULL,
---    geom geometry
---  ) WITH (OIDS=FALSE);
---  ALTER TABLE admin_bdys.temp_final_postcodes OWNER TO postgres;
--- 
---  INSERT INTO admin_bdys.temp_final_postcodes (postcode, state, geom)
---  SELECT postcode,
---         state,
---         (ST_Dump(ST_MakeValid(ST_Multi(ST_SnapToGrid(ST_SimplifyVW(geom, 9.208633852887194e-09), 0.00001))))).geom
---    FROM admin_bdys.postcode_bdys_display_full_res;
--- 
---  DELETE FROM admin_bdys.temp_final_postcodes WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
-
-
-
-SET ROLE Postgres;
-
-UPDATE admin_bdys.locality_bdys_display AS loc
-  SET postcode = locpc.postcode
-FROM geo_adminbdys.aus_locality_postcodes AS locpc
-WHERE loc.locality_pid = locpc.gnaf_locality_pid;
-
 
 -- step 1 - merge localities into postcode and remove all slivers and islands (polygon islands that is, not Great Keppel Island)
 DROP TABLE IF EXISTS admin_bdys.temp_postcodes;
 SELECT postcode,
        state,
---        SUM(address_count) AS address_count,
---        SUM(street_count) AS street_count,
        ST_MakePolygon(ST_ExteriorRing((ST_Dump(ST_MakeValid(ST_Union(ST_MakeValid(ST_Buffer(geom, 0.000001)))))).geom)) AS geom
 	 INTO admin_bdys.temp_postcodes
    FROM admin_bdys.locality_bdys_display AS loc
@@ -167,14 +113,6 @@ CREATE TABLE admin_bdys.postcode_bdys_display
 ALTER TABLE admin_bdys.postcode_bdys_display
   OWNER TO postgres;
 
--- ALTER TABLE admin_bdys.postcode_bdys_display
---   OWNER TO rw;
--- GRANT ALL ON TABLE admin_bdys.postcode_bdys_display TO rw;
--- GRANT SELECT ON TABLE admin_bdys.postcode_bdys_display TO readonly;
--- GRANT SELECT ON TABLE admin_bdys.postcode_bdys_display TO metacentre;
--- GRANT SELECT ON TABLE admin_bdys.postcode_bdys_display TO ro;
--- GRANT ALL ON TABLE admin_bdys.postcode_bdys_display TO update;
-
 INSERT INTO admin_bdys.postcode_bdys_display(postcode, state, geom) -- 15565
 SELECT postcode,
        state,
@@ -198,7 +136,7 @@ ALTER TABLE admin_bdys.postcode_bdys_display CLUSTER ON postcode_bdys_display_ge
 
 ANALYZE admin_bdys.postcode_bdys_display;
 
-select Count(*) from admin_bdys.postcode_bdys_display;
+--select Count(*) from admin_bdys.postcode_bdys_display;
 
 
 -- clean up temp tables
