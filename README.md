@@ -1,3 +1,5 @@
+### Change Log - November 2017 Release
+- Postcode display boundaries are now also created - note: these postcodes are approximations from GNAF addresses and are very close to correct, but they are not authoritative
 ### Change Log - August 2017 Release
 - Locality boundaries are now trimmed to the coastline using ABS Census 2016 SA4 boundaries
 - To use the ABS Census 2011 SA4 table as per before - supply the following argument: `--sa4-boundary-table abs_2011_sa4`
