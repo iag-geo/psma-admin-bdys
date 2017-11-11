@@ -71,6 +71,7 @@ def main():
     verify_locality_polygons(pg_cur, settings)
     get_locality_state_border_gaps(pg_cur, settings)
     finalise_display_localities(pg_cur, settings)
+    create_display_postcodes(pg_cur, settings)
     export_display_localities(pg_cur, settings)
     qa_display_localities(pg_cur, settings)
 
@@ -212,10 +213,16 @@ def finalise_display_localities(pg_cur, settings):
     logger.info("\t- Step 5 of 7 : display localities finalised : {0}".format(datetime.now() - start_time))
 
 
+def create_display_postcodes(pg_cur, settings):
+    start_time = datetime.now()
+    pg_cur.execute(psma.open_sql_file("06-create-display-postcodes.sql", settings))
+    logger.info("\t- Step 6 of 7 : display postcodes created : {0}".format(datetime.now() - start_time))
+
+
 def export_display_localities(pg_cur, settings):
     start_time = datetime.now()
 
-    sql = psma.open_sql_file("06-export-display-localities.sql", settings)
+    sql = psma.open_sql_file("07-export-display-localities.sql", settings)
 
     if platform.system() == "Windows":
         password_str = "SET"
@@ -231,7 +238,7 @@ def export_display_localities(pg_cur, settings):
     # logger.info(cmd
     psma.run_command_line(cmd)
 
-    logger.info("\t- Step 6 of 7 : display localities exported to SHP : {0}".format(datetime.now() - start_time))
+    logger.info("\t- Step 7 of 7 : display localities exported to SHP : {0}".format(datetime.now() - start_time))
     logger.warning("\t\t- If this step took < 1 second - it may have failed silently. "
                    "Check your output directory!")
 
@@ -278,11 +285,11 @@ def export_display_localities(pg_cur, settings):
     text_file.write(geojson)
     text_file.close()
 
-    logger.info("\t- Step 6 of 7 : display localities exported to GeoJSON : {0}".format(datetime.now() - start_time))
+    logger.info("\t- Step 7 of 7 : display localities exported to GeoJSON : {0}".format(datetime.now() - start_time))
 
 
 def qa_display_localities(pg_cur, settings):
-    logger.info("\t- Step 7 of 7 : Start QA")
+    logger.info("\t- Step 8 of 7 : Start QA")
     start_time = datetime.now()
 
     pg_cur.execute(psma.prep_sql("SELECT locality_pid, Locality_name, postcode, state, address_count, street_count "
@@ -293,10 +300,10 @@ def qa_display_localities(pg_cur, settings):
                                  "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);", settings))
     display_qa_results("Empty Geometries", pg_cur)
 
-    pg_cur.execute(psma.open_sql_file("07-qa-display-localities.sql", settings))
+    pg_cur.execute(psma.open_sql_file("08-qa-display-localities.sql", settings))
     display_qa_results("Dropped Localities", pg_cur)
 
-    logger.info("\t- Step 7 of 7 : display localities qa'd : {0}".format(datetime.now() - start_time))
+    logger.info("\t- Step 8 of 7 : display localities qa'd : {0}".format(datetime.now() - start_time))
 
 
 def display_qa_results(purpose, pg_cur):
