@@ -18,11 +18,11 @@
 #  - Data is copyright PSMA - licensed under a Creative Commons (By Attribution) license
 #
 # Pre-requisites
-#  - Either: run the gnaf-loader Python script (30-60 mins); or load the gnaf-loader admin-bdys schema into Postgres
+#  - Either: run the gnaf-loader Python script (30-90 mins); or load the gnaf-loader admin-bdys schema into Postgres
 #      (see https://github.com/minus34/gnaf-loader)
-#  - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5 & 9.6 on macOS)
-#  - PostGIS 2.2+
-#  - Python 2.7 or 3.5 with Psycopg2 2.6.x
+#  - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5, 9.6 & 10.0 on macOS)
+#  - PostGIS 2.3+
+#  - Python 2.7 or 3.6 with Psycopg2 2.7.x
 #
 # TO DO:
 #  - Create postcode boundaries by aggregating the final localities by their postcode (derived from raw GNAF)
