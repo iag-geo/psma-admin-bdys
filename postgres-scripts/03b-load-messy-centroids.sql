@@ -1,7 +1,7 @@
 
 -- Create manually created list of points to do the final selection of messy polygons
 DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
-CREATE TABLE admin_bdys.temp_messy_centroids (
+CREATE TABLE admin_bdys.temp_messy_centroids(
     gid integer NOT NULL,
     locality_pid text NOT NULL,
     loc_gid integer NOT NULL,
