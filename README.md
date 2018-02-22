@@ -46,12 +46,11 @@ These localities are:
 
 | locality_pid | name | postcode | state | addresses | streets |
 | ------------- | ------------- | ------------- | ------------- | -------------: | -------------: |
-| NSW524 | BOTANY BAY | 2019 | NSW | 1 | 12 |
+| NSW524 | BOTANY BAY | 2019 | NSW | 2 | 12 |
 | NSW2046 | JERVIS BAY |  | NSW | 0 | 5 |
-| NSW2275 | LAKE MACQUARIE |  | NSW | 1 | 67 |
 | NSW2627 | MIDDLE HARBOUR | 2087 | NSW | 4 | 23 |
 | NSW3019 | NORTH HARBOUR |  | NSW | 0 | 11 |
-| NSW3255 | PITTWATER | 2106 | NSW | 5 | 31 |
+| NSW3255 | PITTWATER | 2105 | NSW | 5 | 31 |
 | NT26 | BEAGLE GULF |  | NT | 0 | 0 |
 | NT75 | DARWIN HARBOUR |  | NT | 0 | 0 |
-| QLD1351 | HERVEY BAY |  | QLD | 0 | 2 |
+| QLD3395 | UNNAMED LOCALITY | 9999 | QLD | 0 | 2 |
