@@ -238,9 +238,12 @@ def export_display_localities(pg_cur, settings):
     # logger.info(cmd
     psma.run_command_line(cmd)
 
-    logger.info("\t- Step 7 of 7 : display localities exported to SHP : {0}".format(datetime.now() - start_time))
-    logger.warning("\t\t- If this step took < 1 second - it may have failed silently. "
-                   "Check your output directory!")
+    time_elapsed = datetime.now() - start_time
+
+    logger.info("\t- Step 7 of 7 : display localities exported to SHP : {0}".format(time_elapsed))
+    if time_elapsed.seconds < 2:
+        logger.warning("\t\t- This step took < 2 seconds - it may have failed silently. "
+                       "Check your output directory!")
 
     start_time = datetime.now()
 
