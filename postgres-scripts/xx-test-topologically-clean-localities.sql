@@ -1,27 +1,107 @@
 
+DROP TABLE IF EXISTS testing.locality_bdys_display;
+CREATE TABLE testing.locality_bdys_display AS
+  SELECT locality_pid, ST_RemoveRepeatedPoints(geom) AS geom FROM admin_bdys_201811.locality_bdys_display;
+
+ANALYSE testing.locality_bdys_display;
+
+
 -- look for duplicates coordinates in the same record
-WITH polys AS (
-	SELECT row_number() OVER () AS gid, locality_pid, (ST_Dump(geom)).geom AS geom FROM admin_bdys_201811.locality_bdys_display
--- ), fixes AS (
--- 	SELECT gid, locality_pid, ST_MakeValid(ST_Buffer(geom, 0.0)) AS geom FROM polys
-), points AS (
-	SELECT gid, locality_pid, (ST_Dump(ST_Points(geom))).geom AS geom FROM polys
+-- WITH polys AS (
+-- 	SELECT row_number() OVER () AS gid, locality_pid, (ST_Dump(geom)).geom AS geom FROM testing.locality_bdys_display
+-- -- ), fixes AS (
+-- -- 	SELECT gid, locality_pid, ST_MakeValid(ST_Buffer(ST_RemoveRepeatedPoints(geom, 0.00001), 0.0)) AS geom FROM polys
+-- ),
+WITH points AS (
+	SELECT locality_pid,
+	       (ST_Dump(ST_Points(geom))).geom AS geom
+	FROM testing.locality_bdys_display
 ), coords AS (
-	SELECT gid, locality_pid, ST_Y(geom)::numeric(7, 5) AS latitude, ST_X(geom)::numeric(8, 5) AS longitude FROM points
+	SELECT row_number() OVER (PARTITION BY locality_pid) AS point_seq,
+				 locality_pid,
+				 ST_Y(geom)::numeric(7, 5)                     AS latitude,
+				 ST_X(geom)::numeric(8, 5)                     AS longitude
+	FROM points
 ), dupes AS (
-	SELECT gid,
-	       locality_pid,
+	SELECT locality_pid,
 				 longitude,
 				 latitude,
-	       Count(*) as cnt
+				 Count(*) as cnt
 	FROM coords
-	GROUP BY gid,
-	         locality_pid,
+	WHERE point_seq > 1
+	GROUP BY locality_pid,
 					 longitude,
 					 latitude
 )
 SELECT * FROM dupes WHERE cnt > 1 -- 18079
 ;
+
+
+-- locality_pid	longitude	latitude	cnt
+-- NSW3201	149.64435	-33.24516	2
+
+
+-- get duplicate point sequence numbers
+WITH points AS (
+	SELECT locality_pid,
+				 (ST_Dump(ST_Points(geom))).geom  AS geom
+	FROM testing.locality_bdys_display
+	WHERE locality_pid = 'NSW3201'
+), coords AS (
+	SELECT row_number() OVER (PARTITION BY locality_pid) AS point_seq,
+				 locality_pid,
+				 ST_Y(geom)::numeric(7, 5)                     AS latitude,
+				 ST_X(geom)::numeric(8, 5)                     AS longitude,
+				 geom
+	FROM points
+)
+SELECT point_seq, locality_pid, longitude, latitude
+FROM coords
+WHERE latitude = '-33.24516'
+;
+
+
+
+-- look at duplicated points by creating linestrings
+DROP TABLE IF EXISTS testing.locality_bdys_display_lines;
+CREATE TABLE testing.locality_bdys_display_lines AS
+WITH points AS (
+	SELECT locality_pid,
+				 (ST_Dump(ST_Points(geom))).geom  AS geom
+	FROM admin_bdys_201811.locality_bdys_display
+  WHERE locality_pid = 'ACT110'
+), coords AS (
+	SELECT row_number() OVER (PARTITION BY locality_pid) AS point_seq,
+	       locality_pid,
+	       ST_Y(geom)::numeric(7, 5) AS latitude,
+	       ST_X(geom)::numeric(8, 5) AS longitude,
+	       geom
+	FROM points
+), part1 AS (
+  SELECT 1 AS line_num,
+         locality_pid,
+         ST_Makeline(geom order by point_seq)
+  FROM coords
+  WHERE point_seq < 81
+  GROUP BY locality_pid
+), part2 AS (
+	SELECT 1 AS line_num,
+				 locality_pid,
+				 ST_Makeline(geom order by point_seq)
+	FROM coords
+	WHERE point_seq >= 81
+	GROUP BY locality_pid
+)
+SELECT * FROM part1
+UNION ALL
+SELECT * FROM part2
+;
+
+ANALYSE testing.locality_bdys_display_lines;
+
+
+
+select postgis_version();
 
 
 -- Total points
