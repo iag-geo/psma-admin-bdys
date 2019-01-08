@@ -1,25 +1,35 @@
 
-
--- Find bowties and duplicate coords -- 17961
-SELECT locality_pid, lng, lat, cnt FROM (
-	SELECT locality_pid, lng, lat, Count(*) as cnt FROM (
-		SELECT locality_pid, ST_X(geom)::numeric(9,6) AS lng, ST_Y(geom)::numeric(8,6) AS lat FROM (
-			SELECT locality_pid, (ST_Dump(ST_Points(geom))).geom AS geom FROM admin_bdys_201611.locality_bdys_display	
-		) AS sqt
-	) AS sqt2
-	GROUP BY locality_pid, lng, lat
-) AS sqt3
-WHERE cnt > 1;
+-- look for duplicates coordinates in the same record
+WITH polys AS (
+	SELECT row_number() OVER () AS gid, locality_pid, (ST_Dump(geom)).geom AS geom FROM admin_bdys_201811.locality_bdys_display
+-- ), fixes AS (
+-- 	SELECT gid, locality_pid, ST_MakeValid(ST_Buffer(geom, 0.0)) AS geom FROM polys
+), points AS (
+	SELECT gid, locality_pid, (ST_Dump(ST_Points(geom))).geom AS geom FROM polys
+), coords AS (
+	SELECT gid, locality_pid, ST_Y(geom)::numeric(7, 5) AS latitude, ST_X(geom)::numeric(8, 5) AS longitude FROM points
+), dupes AS (
+	SELECT gid,
+	       locality_pid,
+				 longitude,
+				 latitude,
+	       Count(*) as cnt
+	FROM coords
+	GROUP BY gid,
+	         locality_pid,
+					 longitude,
+					 latitude
+)
+SELECT * FROM dupes WHERE cnt > 1 -- 18079
+;
 
 
 -- Total points
-SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_201611.locality_bdys_display; -- 4688805
+SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_201811.locality_bdys;         -- 12,938,094
+SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_201811.locality_bdys_display; --  4,392,196
 
 
-
-
-
--- nothinh below here works....
+-- nothing below here works....
 
 -- 
 -- 
