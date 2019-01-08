@@ -26,7 +26,7 @@ SELECT * FROM dupes WHERE cnt > 1 -- 18079
 
 -- Total points
 SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_201811.locality_bdys;         -- 12,938,094
-SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_201811.locality_bdys_display; --  4,392,196
+SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_201811.locality_bdys_display; --  4,392,196 (66% reduction)
 
 
 -- nothing below here works....
