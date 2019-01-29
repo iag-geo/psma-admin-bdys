@@ -3,6 +3,13 @@
 --   WHERE locality_pid = 'NSW2273';
 
 
+-- number of points - original localities --12,938,094
+SELECT Count(*) as num_points FROM (
+ SELECT (ST_DumpPoints(geom)).geom as geom
+ FROM admin_bdys_201811.locality_bdys
+) AS sqt;
+
+
 -- number of points - full res localities --29,444,120
 SELECT Count(*) as num_points FROM (
   SELECT (ST_DumpPoints(geom)).geom as geom
