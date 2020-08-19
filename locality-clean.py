@@ -36,6 +36,7 @@ import os
 import platform
 import psma
 import psycopg2
+import zipfile
 
 from datetime import datetime
 
@@ -162,6 +163,9 @@ def get_settings(args):
     # full path and file name to export the resulting Shapefile to
     settings['shapefile_export_path'] = os.path.join(settings['output_path'], "locality-bdys-display-{0}.shp"
                                                      .format(settings['psma_version']))
+    settings['shapefile_name'] = "locality-bdys-display-{0}".format(settings['psma_version'])
+    settings['shapefile_extensions'] = [".cpg", ".dbf", ".prj", ".shp", ".shx"]
+
     settings['geojson_export_path'] = os.path.join(settings['output_path'], "locality-bdys-display-{0}.geojson"
                                                    .format(settings['psma_version']))
 
@@ -237,6 +241,17 @@ def export_display_localities(pg_cur, settings):
 
     # logger.info(cmd
     psma.run_command_line(cmd)
+
+    # zip shapefile
+    output_zipfile = os.path.join(settings['output_path'], settings['shapefile_name'] + "-shapefile.zip")
+    zf = zipfile.ZipFile(output_zipfile, mode="w")
+
+    for ext in settings['shapefile_extensions']:
+        file_name = settings['shapefile_name'] + ext
+        file_path = os.path.join(settings['output_path'], file_name)
+        zf.write(file_path, file_name, compress_type=zipfile.ZIP_DEFLATED)
+
+    zf.close()
 
     time_elapsed = datetime.now() - start_time
 
