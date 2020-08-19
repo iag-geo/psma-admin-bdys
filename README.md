@@ -46,8 +46,8 @@ These localities are:
 | ------------- | ------------- | ------------- | ------------- | -------------: | -------------: |
 | NSW524 | BOTANY BAY | 2019 | NSW | 2 | 12 |
 | NSW2046 | JERVIS BAY |  | NSW | 0 | 5 |
-| NSW2627 | MIDDLE HARBOUR | 2087 | NSW | 4 | 23 |
-| NSW3019 | NORTH HARBOUR |  | NSW | 0 | 11 |
+| NSW2627 | MIDDLE HARBOUR | 2087 | NSW | 3 | 23 |
+| NSW3019 | NORTH HARBOUR |  | NSW | 0 | 10 |
 | NSW3255 | PITTWATER | 2105 | NSW | 5 | 31 |
 | NT26 | BEAGLE GULF |  | NT | 0 | 0 |
 | NT75 | DARWIN HARBOUR |  | NT | 0 | 0 |
