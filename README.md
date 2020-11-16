@@ -1,5 +1,5 @@
 # psma-admin-bdys
-Some utils to make it easier to use the PSMA's Administrative Boundaries
+Some utils to make it easier to use Geoscape's Administrative Boundaries
 
 ## locality-clean
 A Python script for creating a clean version of the Suburb-Locality boundaries for presentation or visualisation.
