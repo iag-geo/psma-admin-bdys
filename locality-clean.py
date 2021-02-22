@@ -303,6 +303,10 @@ def export_display_localities(pg_cur, settings):
     text_file.write(geojson)
     text_file.close()
 
+    # compress GeoJSON
+    zipfile.ZipFile(settings['geojson_export_path'] + ".zip", mode="w") \
+        .write(settings['geojson_export_path'], compress_type=zipfile.ZIP_DEFLATED)
+
     logger.info("\t- Step 7 of 8 : display localities exported to GeoJSON : {0}".format(datetime.now() - start_time))
 
 
