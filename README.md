@@ -18,7 +18,7 @@ State border improvements
 
 ### Important
 
-The cleaned and thinned localities have a reduced precision of 1-2m; however this is within the general precision of the property boundary data (PSMA Cadlite) used to create the locality boundaries.
+The cleaned and thinned localities have a reduced precision of 1-2m; however this is within the general precision of the property boundary data (Geoscape Cadlite) used to create the locality boundaries.
 
 ### I Just Want the Data!
 
