@@ -33,7 +33,7 @@ Incorporates or developed using Administrative Boundaries © [Geoscape Australia
 ### Script Pre-requisites
 
 - You will need to run the [gnaf-loader](https://github.com/minus34/gnaf-loader) script to load the required Admin Bdy tables into Postgres
-- Postgres 9.x or 10.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5, 9.6, 10 on OSX)
+- Postgres 10.x and above
 - PostGIS 2.1+
 - Python 2.7 or 3.5+ with Psycopg2 2.6+
 
