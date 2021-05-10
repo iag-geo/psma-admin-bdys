@@ -46,15 +46,16 @@
             header.appendChild(formatter.render())
         }
 
-        // For the example, we fix a visible Rect in the middle of the map
-        function getBoundForRect() {
-            const widthMeters = 2000;
-            return map.getCenter().toBounds(widthMeters);
-        }
+        // // For the example, we fix a visible Rect in the middle of the map
+        // function getBoundForRect() {
+        //     const widthMeters = 2000;
+        //     return map.getCenter().toBounds(widthMeters);
+        // }
 
         // convert the rect into the format flatgeobuf expects
         function fgBoundingBox() {
-            const bounds = getBoundForRect();
+            const bounds = map.getBounds();
+            // const bounds = getBoundForRect();
             return {
                 minX: bounds.getWest(),
                 maxX: bounds.getEast(),
@@ -105,14 +106,14 @@
         // if the user is panning around alot, only update once per second max
         updateResults = _.debounce(updateResults, 1000);
 
-        // show a leaflet rect corresponding to our bounding box
-        let rectangle = L.rectangle(getBoundForRect(), { color: "yellow", fillOpacity: 0.7, opacity: 1.0 }).addTo(map);
+        // // show a leaflet rect corresponding to our bounding box
+        // let rectangle = L.rectangle(getBoundForRect(), { color: "yellow", fillOpacity: 0.7, opacity: 1.0 }).addTo(map);
 
         // show results based on the initial map
         updateResults();
         // ...and update the results whenever the map moves
         map.on("moveend", function(s){
-            rectangle.setBounds(getBoundForRect());
+            // rectangle.setBounds(getBoundForRect());
             updateResults();
         });
     });
