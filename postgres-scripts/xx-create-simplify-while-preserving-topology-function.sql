@@ -1,6 +1,6 @@
 
 
--- HS note: this doesn't scale to PSMA localities - it never finishes!
+-- HS note: this doesn't scale to Geoscape localities - it never finishes!
 
 
 -- Simplify the given table of multipolygon with the given tolerance.
