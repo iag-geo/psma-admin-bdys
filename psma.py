@@ -162,7 +162,7 @@ def split_sql_into_list(pg_cur, the_sql, table_schema, table_name, table_alias, 
 
 
 # get latest PSMA release version as YYYYMM, as of the date provided
-def get_psma_version(date):
+def get_geoscape_version(date):
     month = date.month
     year = date.year
 

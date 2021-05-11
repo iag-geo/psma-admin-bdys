@@ -115,15 +115,15 @@ def set_arguments():
              'otherwise \'password\'.')
 
     # schema names for the raw gnaf, flattened reference and admin boundary tables
-    psma_version = psma.get_psma_version(datetime.today())
+    geoscape_version = psma.get_geoscape_version(datetime.today())
 
     parser.add_argument(
-        '--psma-version', default=psma_version,
-        help='PSMA Version number as YYYYMM. Defaults to last release year and month \'' + psma_version + '\'.')
+        '--geoscape-version', default=geoscape_version,
+        help='PSMA Version number as YYYYMM. Defaults to last release year and month \'' + geoscape_version + '\'.')
     parser.add_argument(
-        '--admin-schema', default='admin_bdys_' + psma_version,
+        '--admin-schema', default='admin_bdys_' + geoscape_version,
         help='Destination schema name to store final admin boundary tables in. Defaults to \'admin_bdys_'
-             + psma_version + '\'.')
+             + geoscape_version + '\'.')
     parser.add_argument(
         '--sa4-boundary-table', default='abs_2016_sa4',
         help='SA4 table name used to create state boundaries. '
@@ -141,7 +141,7 @@ def get_settings(args):
     settings = dict()
 
     settings['max_concurrent_processes'] = args.max_processes
-    settings['psma_version'] = args.psma_version
+    settings['geoscape_version'] = args.geoscape_version
     settings['gnaf_schema'] = None  # dummy setting required to make psma.py utilities universal with the gnaf-laoder
     settings['admin_bdys_schema'] = args.admin_schema
     settings['sa4_boundary_table'] = args.sa4_boundary_table
@@ -162,12 +162,12 @@ def get_settings(args):
 
     # full path and file name to export the resulting Shapefile to
     settings['shapefile_export_path'] = os.path.join(settings['output_path'], "locality-bdys-display-{0}.shp"
-                                                     .format(settings['psma_version']))
-    settings['shapefile_name'] = "locality-bdys-display-{0}".format(settings['psma_version'])
+                                                     .format(settings['geoscape_version']))
+    settings['shapefile_name'] = "locality-bdys-display-{0}".format(settings['geoscape_version'])
     settings['shapefile_extensions'] = [".cpg", ".dbf", ".prj", ".shp", ".shx"]
 
     settings['geojson_export_path'] = os.path.join(settings['output_path'], "locality-bdys-display-{0}.geojson"
-                                                   .format(settings['psma_version']))
+                                                   .format(settings['geoscape_version']))
 
     # left over issue with the psma.py module - don't edit this
     settings['raw_gnaf_schema'] = None

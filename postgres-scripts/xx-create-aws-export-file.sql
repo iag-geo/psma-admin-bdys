@@ -37,7 +37,7 @@ STORED AS INPUTFORMAT
 OUTPUTFORMAT 
   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
 LOCATION
-  's3://minus34.com/opendata/psma-202105/admin_bdys'
+  's3://minus34.com/opendata/geoscape-202105/admin_bdys'
 
 
 
@@ -56,5 +56,5 @@ STORED AS INPUTFORMAT
 OUTPUTFORMAT 
   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
 LOCATION
-  's3://minus34.com/opendata/psma-202105/admin_bdys'
+  's3://minus34.com/opendata/geoscape-202105/admin_bdys'
 
