@@ -1,18 +1,3 @@
-
--- Create manually created list of points to do the final selection of messy polygons
-DROP TABLE IF EXISTS admin_bdys.temp_messy_centroids;
-CREATE TABLE admin_bdys.temp_messy_centroids(
-    gid integer NOT NULL,
-    locality_pid text NOT NULL,
-    loc_gid integer NOT NULL,
-    state_gid integer NOT NULL,
-    latitude numeric(10,8),
-    longitude numeric(11,8),
-    geom public.geometry(Point,4283) NOT NULL
-);
-ALTER TABLE admin_bdys.temp_messy_centroids OWNER TO postgres;
-
--- manually created ones since go live
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (1, 'loc6c8b382905a5', 999999, 999999, NULL, NULL, '0101000020BB10000063AE45564D97624041EE67F83C7934C0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (2, 'loc7e8110b81b29', 99999, 99999, NULL, NULL, '0101000020BB100000E59143DF282F6140120ECCC8A03241C0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (3, 'loc715edc0568df', 4476, 1578, NULL, NULL, '0101000020BB1000006C3C5D5E56E562402F58AA624EBC40C0');
@@ -27,14 +12,6 @@ INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_g
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (12, 'loc3589842da508', 9999999, 9999999, NULL, NULL, ST_SetSRID(ST_MakePoint(138.06245,-33.13425), 4283));
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (13, 'loc01d9547b8c7c', 9999999, 9999999, NULL, NULL, ST_SetSRID(ST_MakePoint(137.7519908,-32.9119697), 4283));
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (14, 'loc857fd6231633', 9999999, 9999999, NULL, NULL, ST_SetSRID(ST_MakePoint(138.200746,-34.267551), 4283));
---INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (15, '', 9999999, 9999999, NULL, NULL, ST_SetSRID(ST_MakePoint(), 4283));
---INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (16, '', 9999999, 9999999, NULL, NULL, ST_SetSRID(ST_MakePoint(), 4283));
---INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (17, '', 9999999, 9999999, NULL, NULL, ST_SetSRID(ST_MakePoint(), 4283));
---INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (18, '', 9999999, 9999999, NULL, NULL, ST_SetSRID(ST_MakePoint(), 4283));
---INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (19, '', 9999999, 9999999, NULL, NULL, ST_SetSRID(ST_MakePoint(), 4283));
-
-
--- original go live edits
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (695, 'loc4aaf45c6ecf6', 14998, 5884, -27.80265836, 153.37813085, '0101000020BB1000007A4BDEA5192C63409D0FAE047BCD3BC0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (813, 'locdbb9e644cdbc', 3020, 6724, -38.23143600, 144.64108739, '0101000020BB100000B2BDB3C983146240FC8EE1B19F1D43C0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (1213, 'locd0e5644cb8fb', 12153, 1471, -32.59379105, 115.79497855, '0101000020BB1000006051B6EDE0F25C4029345A58014C40C0');
@@ -185,5 +162,3 @@ INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_g
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (12981, 'locd33842b82a3b', 2994, 6037, -25.56999765, 152.94362562, '0101000020BB1000002B325B2E321E6340FF8BB15DEB9139C0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (12983, 'locd33842b82a3b', 2994, 6045, -25.55846780, 152.93891652, '0101000020BB1000005F62A89A0B1E63407BDEE8BEF78E39C0');
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (12986, 'locd33842b82a3b', 2994, 6070, -25.55446215, 152.94438455, '0101000020BB10000020A3F265381E6340AE1E413BF18D39C0');
-
-ALTER TABLE ONLY admin_bdys.temp_messy_centroids ADD CONSTRAINT temp_messy_centroids_pkey PRIMARY KEY (gid);

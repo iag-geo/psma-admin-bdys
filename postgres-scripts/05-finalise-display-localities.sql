@@ -254,7 +254,7 @@ SELECT 900000000 + gid,
 UPDATE admin_bdys.temp_split_localities AS loc
   SET match_type = 'MANUAL'
   FROM admin_bdys.temp_messy_centroids AS pnt
-  WHERE (ST_Within(pnt.geom, loc.geom) OR loc.locality_pid = 'NSW4451') -- NSW4451 = Woronora
+  WHERE (ST_Within(pnt.geom, loc.geom) OR loc.locality_pid = 'loc53bd3a3a3b1f') -- Woronora, NSW
   AND loc.match_type = 'SPLIT';
 
 -- manual fix to remove an unpopulated, oversized torres straight, QLD polygon -- 1
@@ -267,6 +267,7 @@ UPDATE admin_bdys.temp_split_localities
 DROP TABLE IF EXISTS admin_bdys.temp_full_res_localities CASCADE;
 CREATE TABLE admin_bdys.temp_full_res_localities (
   locality_pid text,
+  old_locality_pid text,
   locality_name text,
   postcode character(4),
   state text,
@@ -275,8 +276,9 @@ CREATE TABLE admin_bdys.temp_full_res_localities (
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_full_res_localities OWNER TO postgres;
 
-INSERT INTO admin_bdys.temp_full_res_localities (locality_pid, locality_name, postcode, state, geom)
+INSERT INTO admin_bdys.temp_full_res_localities (locality_pid, old_locality_pid, locality_name, postcode, state, geom)
 SELECT tmp.locality_pid,
+       loc.old_locality_pid,
        loc.locality_name,
        loc.postcode,
        loc.state,
@@ -286,9 +288,10 @@ SELECT tmp.locality_pid,
   ON tmp.locality_pid = loc.locality_pid
   WHERE tmp.match_type <> 'SPLIT'
   GROUP BY tmp.locality_pid,
-		loc.locality_name,
-	  loc.postcode,
-    loc.state;
+           loc.old_locality_pid,
+		   loc.locality_name,
+	       loc.postcode,
+           loc.state;
 
  DELETE FROM admin_bdys.temp_full_res_localities WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
 
@@ -297,6 +300,7 @@ SELECT tmp.locality_pid,
 DROP TABLE IF EXISTS admin_bdys.locality_bdys_display_full_res CASCADE;
 CREATE TABLE admin_bdys.locality_bdys_display_full_res (
   locality_pid text PRIMARY KEY,
+  old_locality_pid text,
   locality_name text,
   postcode character(4),
   state text,
@@ -305,17 +309,19 @@ CREATE TABLE admin_bdys.locality_bdys_display_full_res (
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.locality_bdys_display_full_res OWNER TO postgres;
 
-INSERT INTO admin_bdys.locality_bdys_display_full_res (locality_pid, locality_name, postcode, state, geom)
+INSERT INTO admin_bdys.locality_bdys_display_full_res (locality_pid, old_locality_pid, locality_name, postcode, state, geom)
 SELECT locality_pid,
+       old_locality_pid,
        locality_name,
        postcode,
        state,
        ST_Multi(ST_Union(geom))
   FROM admin_bdys.temp_full_res_localities
   GROUP BY locality_pid,
-		locality_name,
-	  postcode,
-    state;
+           old_locality_pid,
+		   locality_name,
+	       postcode,
+           state;
 
 CREATE INDEX localities_display_full_res_geom_idx ON admin_bdys.locality_bdys_display_full_res USING gist (geom);
 ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_display_full_res_geom_idx;
@@ -345,6 +351,7 @@ ANALYZE admin_bdys.locality_bdys_display_full_res;
  (
    gid serial NOT NULL,
    locality_pid text NOT NULL,
+   old_locality_pid text NULL,
    locality_name text NOT NULL,
    postcode text NULL,
    state text NOT NULL,
@@ -366,8 +373,9 @@ ANALYZE admin_bdys.locality_bdys_display_full_res;
 -- GRANT ALL ON TABLE admin_bdys.locality_bdys_display TO update;
 
 
- INSERT INTO admin_bdys.locality_bdys_display(locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565
+ INSERT INTO admin_bdys.locality_bdys_display(locality_pid, old_locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565
  SELECT loc.locality_pid,
+        loc.old_locality_pid,
         loc.locality_name,
         loc.postcode,
         loc.state,
