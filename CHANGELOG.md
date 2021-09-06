@@ -1,6 +1,6 @@
 ### August 2021 Release
 - Existing locality_pids have been replaced by Geoscape
-- Added `old_pid` field to exported locality_bdy_display Shapefile, representing the old locality pids
+- Added `old_pid` field to exported _locality_bdy_display_ Shapefile, representing the old locality pids
 
 ### May 2021 Release
 - Renamed all references to PSMA to Geoscape, reflecting the new data provider's name
