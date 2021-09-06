@@ -1,5 +1,5 @@
 
--- create a state boundary table from sa4s (it looks visually better than the PSMA states table due to issues around bays e.g. Botany Bay, NSW) - 5 mins
+-- create a state boundary table from sa4s (it looks visually better than the Geoscape states table due to issues around bays e.g. Botany Bay, NSW) - 5 mins
 
 -- dissolve polygons for each state -- 2 mins -- 6725 
 DROP TABLE IF EXISTS admin_bdys.temp_states;

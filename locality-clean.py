@@ -15,7 +15,7 @@
 #
 # Copyright:
 #  - Code is copyright IAG - licensed under an Apache License, version 2.0
-#  - Data is copyright PSMA - licensed under a Creative Commons (By Attribution) license
+#  - Data is copyright Geoscape - licensed under a Creative Commons (By Attribution) license
 #
 # Pre-requisites
 #  - Either: run the gnaf-loader Python script (30-90 mins); or load the gnaf-loader admin-bdys schema into Postgres
@@ -34,7 +34,7 @@ import json
 import logging.config
 import os
 import platform
-import psma
+import geoscape
 import psycopg2
 import zipfile
 
@@ -59,11 +59,11 @@ def main():
     pg_cur = pg_conn.cursor()
 
     # log postgres/postgis versions being used
-    psma.check_postgis_version(pg_cur, settings, logger)
+    geoscape.check_postgis_version(pg_cur, settings, logger)
 
     # add Postgres functions to clean out non-polygon geometries from GeometryCollections
-    pg_cur.execute(psma.open_sql_file("create-polygon-intersection-function.sql", settings))
-    pg_cur.execute(psma.open_sql_file("create-multi-linestring-split-function.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("create-polygon-intersection-function.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("create-multi-linestring-split-function.sql", settings))
 
     # let's build some clean localities!
     logger.info("")
@@ -87,7 +87,7 @@ def main():
 # set the command line arguments for the script
 def set_arguments():
     parser = argparse.ArgumentParser(
-        description='A quick way to load the complete GNAF and PSMA Admin Boundaries into Postgres, '
+        description='A quick way to load the complete GNAF and Geoscape Admin Boundaries into Postgres, '
                     'simplified and ready to use as reference data for geocoding, analysis and visualisation.')
 
     parser.add_argument(
@@ -115,15 +115,15 @@ def set_arguments():
              'otherwise \'password\'.')
 
     # schema names for the raw gnaf, flattened reference and admin boundary tables
-    psma_version = psma.get_psma_version(datetime.today())
+    geoscape_version = geoscape.get_geoscape_version(datetime.today())
 
     parser.add_argument(
-        '--psma-version', default=psma_version,
-        help='PSMA Version number as YYYYMM. Defaults to last release year and month \'' + psma_version + '\'.')
+        '--geoscape-version', default=geoscape_version,
+        help='Geoscape Version number as YYYYMM. Defaults to last release year and month \'' + geoscape_version + '\'.')
     parser.add_argument(
-        '--admin-schema', default='admin_bdys_' + psma_version,
+        '--admin-schema', default='admin_bdys_' + geoscape_version,
         help='Destination schema name to store final admin boundary tables in. Defaults to \'admin_bdys_'
-             + psma_version + '\'.')
+             + geoscape_version + '\'.')
     parser.add_argument(
         '--sa4-boundary-table', default='abs_2016_sa4',
         help='SA4 table name used to create state boundaries. '
@@ -141,8 +141,8 @@ def get_settings(args):
     settings = dict()
 
     settings['max_concurrent_processes'] = args.max_processes
-    settings['psma_version'] = args.psma_version
-    settings['gnaf_schema'] = None  # dummy setting required to make psma.py utilities universal with the gnaf-laoder
+    settings['geoscape_version'] = args.geoscape_version
+    settings['gnaf_schema'] = None  # dummy setting required to make geoscape.py utilities universal with the gnaf-laoder
     settings['admin_bdys_schema'] = args.admin_schema
     settings['sa4_boundary_table'] = args.sa4_boundary_table
     settings['output_path'] = args.output_path
@@ -162,14 +162,14 @@ def get_settings(args):
 
     # full path and file name to export the resulting Shapefile to
     settings['shapefile_export_path'] = os.path.join(settings['output_path'], "locality-bdys-display-{0}.shp"
-                                                     .format(settings['psma_version']))
-    settings['shapefile_name'] = "locality-bdys-display-{0}".format(settings['psma_version'])
+                                                     .format(settings['geoscape_version']))
+    settings['shapefile_name'] = "locality-bdys-display-{0}".format(settings['geoscape_version'])
     settings['shapefile_extensions'] = [".cpg", ".dbf", ".prj", ".shp", ".shx"]
 
     settings['geojson_export_path'] = os.path.join(settings['output_path'], "locality-bdys-display-{0}.geojson"
-                                                   .format(settings['psma_version']))
+                                                   .format(settings['geoscape_version']))
 
-    # left over issue with the psma.py module - don't edit this
+    # left over issue with the geoscape.py module - don't edit this
     settings['raw_gnaf_schema'] = None
     settings['raw_admin_bdys_schema'] = None
 
@@ -178,55 +178,55 @@ def get_settings(args):
 
 def create_states_and_prep_localities(settings):
     start_time = datetime.now()
-    sql_list = [psma.open_sql_file("01a-create-states-from-sa4s.sql", settings),
-                psma.open_sql_file("01b-prep-locality-boundaries.sql", settings)]
-    psma.multiprocess_list("sql", sql_list, settings, logger)
+    sql_list = [geoscape.open_sql_file("01a-create-states-from-sa4s.sql", settings),
+                geoscape.open_sql_file("01b-prep-locality-boundaries.sql", settings)]
+    geoscape.multiprocess_list("sql", sql_list, settings, logger)
     logger.info("\t- Step 1 of 8 : state table created & localities prepped : {0}".format(datetime.now() - start_time))
 
 
 # split locality bdys by state bdys, using multiprocessing
 def get_split_localities(pg_cur, settings):
     start_time = datetime.now()
-    sql = psma.open_sql_file("02-split-localities-by-state-borders.sql", settings)
-    sql_list = psma.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'], "temp_localities", "loc", "gid",
+    sql = geoscape.open_sql_file("02-split-localities-by-state-borders.sql", settings)
+    sql_list = geoscape.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'], "temp_localities", "loc", "gid",
                                         settings, logger)
-    psma.multiprocess_list("sql", sql_list, settings, logger)
+    geoscape.multiprocess_list("sql", sql_list, settings, logger)
     logger.info("\t- Step 2 of 8 : localities split by state : {0}".format(datetime.now() - start_time))
 
 
 def verify_locality_polygons(pg_cur, settings):
     start_time = datetime.now()
-    pg_cur.execute(psma.open_sql_file("03a-verify-split-polygons.sql", settings))
-    pg_cur.execute(psma.open_sql_file("03b-load-messy-centroids.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("03a-verify-split-polygons.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("03b-load-messy-centroids.sql", settings))
     logger.info("\t- Step 3 of 8 : messy locality polygons verified : {0}".format(datetime.now() - start_time))
 
 
 # get holes in the localities along the state borders, using multiprocessing (doesn't help much - too few states!)
 def get_locality_state_border_gaps(pg_cur, settings):
     start_time = datetime.now()
-    sql = psma.open_sql_file("04-create-holes-along-borders.sql", settings)
-    sql_list = psma.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'],
+    sql = geoscape.open_sql_file("04-create-holes-along-borders.sql", settings)
+    sql_list = geoscape.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'],
                                         "temp_state_border_buffers_subdivided", "ste", "new_gid", settings, logger)
-    psma.multiprocess_list("sql", sql_list, settings, logger)
+    geoscape.multiprocess_list("sql", sql_list, settings, logger)
     logger.info("\t- Step 4 of 8 : locality holes created : {0}".format(datetime.now() - start_time))
 
 
 def finalise_display_localities(pg_cur, settings):
     start_time = datetime.now()
-    pg_cur.execute(psma.open_sql_file("05-finalise-display-localities.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("05-finalise-display-localities.sql", settings))
     logger.info("\t- Step 5 of 8 : display localities finalised : {0}".format(datetime.now() - start_time))
 
 
 def create_display_postcodes(pg_cur, settings):
     start_time = datetime.now()
-    pg_cur.execute(psma.open_sql_file("06-create-display-postcodes.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("06-create-display-postcodes.sql", settings))
     logger.info("\t- Step 6 of 8 : display postcodes created : {0}".format(datetime.now() - start_time))
 
 
 def export_display_localities(pg_cur, settings):
     start_time = datetime.now()
 
-    sql = psma.open_sql_file("07-export-display-localities.sql", settings)
+    sql = geoscape.open_sql_file("07-export-display-localities.sql", settings)
 
     if platform.system() == "Windows":
         password_str = "SET"
@@ -240,7 +240,7 @@ def export_display_localities(pg_cur, settings):
                 settings['pg_port'], settings['pg_db'], sql)
 
     # logger.info(cmd
-    psma.run_command_line(cmd)
+    geoscape.run_command_line(cmd)
 
     # zip shapefile
     output_zipfile = os.path.join(settings['output_path'], settings['shapefile_name'] + "-shapefile.zip")
@@ -263,7 +263,7 @@ def export_display_localities(pg_cur, settings):
     start_time = datetime.now()
 
     # Export as GeoJSON FeatureCollection
-    sql = psma.prep_sql("SELECT gid, locality_pid, locality_name, COALESCE(postcode, '') AS postcode, state, "
+    sql = geoscape.prep_sql("SELECT gid, locality_pid, locality_name, COALESCE(postcode, '') AS postcode, state, "
                         "locality_class, address_count, street_count, ST_AsGeoJSON(geom, 5, 0) AS geom "
                         "FROM {0}.locality_bdys_display".format(settings['admin_bdys_schema']), settings)
     pg_cur.execute(sql)
@@ -314,15 +314,15 @@ def qa_display_localities(pg_cur, settings):
     logger.info("\t- Step 8 of 8 : Start QA")
     start_time = datetime.now()
 
-    pg_cur.execute(psma.prep_sql("SELECT locality_pid, Locality_name, postcode, state, address_count, street_count "
+    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, Locality_name, postcode, state, address_count, street_count "
                                  "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);", settings))
     display_qa_results("Invalid Geometries", pg_cur)
 
-    pg_cur.execute(psma.prep_sql("SELECT locality_pid, Locality_name, postcode, state, address_count, street_count "
+    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, Locality_name, postcode, state, address_count, street_count "
                                  "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);", settings))
     display_qa_results("Empty Geometries", pg_cur)
 
-    pg_cur.execute(psma.open_sql_file("08-qa-display-localities.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("08-qa-display-localities.sql", settings))
     display_qa_results("Dropped Localities", pg_cur)
 
     logger.info("\t- Step 8 of 8 : display localities qa'd : {0}".format(datetime.now() - start_time))
@@ -367,7 +367,7 @@ if __name__ == '__main__':
 
     logger.info("")
     logger.info("Start locality-clean")
-    psma.check_python_version(logger)
+    geoscape.check_python_version(logger)
 
     if main():
         logger.info("Finished successfully!")

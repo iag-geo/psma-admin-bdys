@@ -27,7 +27,7 @@ SELECT '| ' || loc.locality_pid || ' | ' || loc.locality_name || ' | ' || COALES
 
 -- 
 -- 
--- -- QA - PSMA changes
+-- -- QA - Geoscape changes
 -- 
 -- -- New locality_pids
 -- SELECT loc.*
