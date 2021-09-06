@@ -1,10 +1,17 @@
+### August 2021 Release
+- Existing locality_pids have been replaced by Geoscape
+- Added `old_pid` field to exported locality_bdy_display Shapefile, representing the old locality pids
+
 ### May 2021 Release
 - Renamed all references to PSMA to Geoscape, reflecting the new data provider's name
+
 ### November 2017 Release
 - Postcode display boundaries are now also created - note: these postcodes are approximations from GNAF addresses and are very close to the real thing, but they are not authoritative
+
 ### August 2017 Release
 - Locality boundaries are now trimmed to the coastline using ABS Census 2016 SA4 boundaries
 - To use the ABS Census 2011 SA4 table as per before - supply the following argument: `--sa4-boundary-table abs_2011_sa4`
+
 ### November 2016 Release
 - Logging is now written to locality-clean.log in your local repo directory as well as to the console 
 - Added `--geoscape-version` to the parameters. Represents the PSMA version number in YYYYMM format and is used to add a suffix to the default schema names. Defaults to current year and latest release month. e.g. `201611`. Valid values are `<year>02` `<year>05` `<year>08` `<year>11`, and is based on the Geoscape quarterly release months 
