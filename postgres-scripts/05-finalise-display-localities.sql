@@ -288,9 +288,10 @@ SELECT tmp.locality_pid,
   ON tmp.locality_pid = loc.locality_pid
   WHERE tmp.match_type <> 'SPLIT'
   GROUP BY tmp.locality_pid,
-		loc.locality_name,
-	  loc.postcode,
-    loc.state;
+           loc.old_locality_pid,
+		   loc.locality_name,
+	       loc.postcode,
+           loc.state;
 
  DELETE FROM admin_bdys.temp_full_res_localities WHERE ST_GeometryType(geom) <> 'ST_Polygon'; -- 20
 
@@ -317,9 +318,10 @@ SELECT locality_pid,
        ST_Multi(ST_Union(geom))
   FROM admin_bdys.temp_full_res_localities
   GROUP BY locality_pid,
-		locality_name,
-	  postcode,
-    state;
+           old_locality_pid,
+		   locality_name,
+	       postcode,
+           state;
 
 CREATE INDEX localities_display_full_res_geom_idx ON admin_bdys.locality_bdys_display_full_res USING gist (geom);
 ALTER TABLE admin_bdys.locality_bdys_display_full_res CLUSTER ON localities_display_full_res_geom_idx;
