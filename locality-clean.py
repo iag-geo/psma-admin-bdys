@@ -267,7 +267,7 @@ def export_display_localities(pg_cur, settings):
     start_time = datetime.now()
 
     # Export as GeoJSON FeatureCollection
-    sql = geoscape.prep_sql("SELECT gid, locality_pid, old_locality_pid, locality_name, COALESCE(postcode, '') AS postcode, state, "
+    sql = geoscape.prep_sql("SELECT gid, locality_pid, locality_name, COALESCE(postcode, '') AS postcode, state, "
                         "locality_class, address_count, street_count, ST_AsGeoJSON(geom, 5, 0) AS geom "
                         "FROM {0}.locality_bdys_display".format(settings['admin_bdys_schema']), settings)
     pg_cur.execute(sql)
