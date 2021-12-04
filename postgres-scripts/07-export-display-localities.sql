@@ -1,6 +1,6 @@
 SELECT gid,
        locality_pid AS loc_pid,
-       old_locality_pid AS old_pid,
+       -- old_locality_pid AS old_pid,
        locality_name AS name,
        COALESCE(postcode, '') AS postcode,
        state,

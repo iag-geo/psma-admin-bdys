@@ -267,7 +267,7 @@ UPDATE admin_bdys.temp_split_localities
 DROP TABLE IF EXISTS admin_bdys.temp_full_res_localities CASCADE;
 CREATE TABLE admin_bdys.temp_full_res_localities (
   locality_pid text,
-  old_locality_pid text,
+--  old_locality_pid text,
   locality_name text,
   postcode character(4),
   state text,
@@ -276,9 +276,9 @@ CREATE TABLE admin_bdys.temp_full_res_localities (
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_full_res_localities OWNER TO postgres;
 
-INSERT INTO admin_bdys.temp_full_res_localities (locality_pid, old_locality_pid, locality_name, postcode, state, geom)
+INSERT INTO admin_bdys.temp_full_res_localities (locality_pid, locality_name, postcode, state, geom)
 SELECT tmp.locality_pid,
-       loc.old_locality_pid,
+--       loc.old_locality_pid,
        loc.locality_name,
        loc.postcode,
        loc.state,
@@ -288,7 +288,7 @@ SELECT tmp.locality_pid,
   ON tmp.locality_pid = loc.locality_pid
   WHERE tmp.match_type <> 'SPLIT'
   GROUP BY tmp.locality_pid,
-           loc.old_locality_pid,
+--           loc.old_locality_pid,
 		   loc.locality_name,
 	       loc.postcode,
            loc.state;
@@ -300,7 +300,7 @@ SELECT tmp.locality_pid,
 DROP TABLE IF EXISTS admin_bdys.locality_bdys_display_full_res CASCADE;
 CREATE TABLE admin_bdys.locality_bdys_display_full_res (
   locality_pid text PRIMARY KEY,
-  old_locality_pid text,
+--  old_locality_pid text,
   locality_name text,
   postcode character(4),
   state text,
@@ -309,16 +309,16 @@ CREATE TABLE admin_bdys.locality_bdys_display_full_res (
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.locality_bdys_display_full_res OWNER TO postgres;
 
-INSERT INTO admin_bdys.locality_bdys_display_full_res (locality_pid, old_locality_pid, locality_name, postcode, state, geom)
+INSERT INTO admin_bdys.locality_bdys_display_full_res (locality_pid, locality_name, postcode, state, geom)
 SELECT locality_pid,
-       old_locality_pid,
+--       old_locality_pid,
        locality_name,
        postcode,
        state,
        ST_Multi(ST_Union(geom))
   FROM admin_bdys.temp_full_res_localities
   GROUP BY locality_pid,
-           old_locality_pid,
+--           old_locality_pid,
 		   locality_name,
 	       postcode,
            state;
@@ -351,7 +351,7 @@ ANALYZE admin_bdys.locality_bdys_display_full_res;
  (
    gid serial NOT NULL,
    locality_pid text NOT NULL,
-   old_locality_pid text NULL,
+--   old_locality_pid text NULL,
    locality_name text NOT NULL,
    postcode text NULL,
    state text NOT NULL,
@@ -373,9 +373,9 @@ ANALYZE admin_bdys.locality_bdys_display_full_res;
 -- GRANT ALL ON TABLE admin_bdys.locality_bdys_display TO update;
 
 
- INSERT INTO admin_bdys.locality_bdys_display(locality_pid, old_locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565
+ INSERT INTO admin_bdys.locality_bdys_display(locality_pid, locality_name, postcode, state, locality_class, address_count, street_count, geom) -- 15565
  SELECT loc.locality_pid,
-        loc.old_locality_pid,
+--        loc.old_locality_pid,
         loc.locality_name,
         loc.postcode,
         loc.state,
