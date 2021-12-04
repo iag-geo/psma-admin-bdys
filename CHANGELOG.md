@@ -1,7 +1,7 @@
 ### November 2021 Release
 - Existing locality_pids have been replaced by Geoscape
 - Removed `old_pid` field from exported _locality_bdy_display_ Shapefile. The GNAF old locality_pid lookup table was a one off in the 202108 release
-- 
+
 ### August 2021 Release
 - Existing locality_pids have been replaced by Geoscape
 - Added `old_pid` field to exported _locality_bdy_display_ Shapefile, representing the old locality pids
