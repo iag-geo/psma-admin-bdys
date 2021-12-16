@@ -250,14 +250,14 @@ def intermediate_shapefile_load_step(args):
     pg_conn.autocommit = True
     pg_cur = pg_conn.cursor()
 
-    result = import_shapefile_to_postgres(pg_cur, file_path, pg_table, pg_schema, delete_table, spatial)
+    result = import_shapefile_to_postgres(pg_cur, file_path, pg_table, pg_schema, delete_table, spatial, settings)
 
     return result
 
 
 # imports a Shapefile into Postgres in 2 steps: SHP > SQL; SQL > Postgres
 # overcomes issues trying to use psql with PGPASSWORD set at runtime
-def import_shapefile_to_postgres(pg_cur, file_path, pg_table, pg_schema, delete_table, spatial):
+def import_shapefile_to_postgres(pg_cur, file_path, pg_table, pg_schema, delete_table, spatial, settings):
 
     # delete target table or append to it?
     if delete_table:
@@ -267,7 +267,7 @@ def import_shapefile_to_postgres(pg_cur, file_path, pg_table, pg_schema, delete_
 
     # assign coordinate system if spatial, otherwise flag as non-spatial
     if spatial:
-        spatial_or_dbf_flags = "-s 4283 -I"
+        spatial_or_dbf_flags = f"-s {settings['srid']} -I"
     else:
         spatial_or_dbf_flags = "-G -n"
 

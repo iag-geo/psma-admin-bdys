@@ -66,6 +66,22 @@ def main():
     pg_cur.execute(geoscape.open_sql_file("create-polygon-intersection-function.sql", settings))
     pg_cur.execute(geoscape.open_sql_file("create-multi-linestring-split-function.sql", settings))
 
+    logger.info("")
+
+    # get SRID of locality boundaries
+    sql = geoscape.prep_sql("select Find_SRID('admin_bdys_202111', 'locality_bdys', 'geom')", settings)
+    pg_cur.execute(sql)
+    settings['srid'] = int(pg_cur.fetchone()[0])
+    if settings['srid'] == 4283:
+        logger.info(f"Locality boundary coordinate system is EPSG:{settings['srid']} (GDA94)")
+    elif settings['srid'] == 7844:
+        logger.info(f"Locality boundary coordinate system is EPSG:{settings['srid']} (GDA2020)")
+    else:
+        logger.fatal("Invalid coordinate system (SRID) - EXITING!\nValid values are 4283 (GDA94) and 7844 (GDA2020)")
+        exit()
+
+    logger.info("")
+
     # let's build some clean localities!
     logger.info("")
     create_states_and_prep_localities(settings)
@@ -95,6 +111,10 @@ def set_arguments():
         '--max-processes', type=int, default=3,
         help='Maximum number of parallel processes to use for the data load. (Set it to the number of cores on the '
              'Postgres server minus 2, limit to 12 if 16+ cores - there is minimal benefit beyond 12). Defaults to 6.')
+
+    # parser.add_argument(
+    #     "--srid", type=int, default=4283,
+    #     help="Sets the coordinate system of the input data. Valid values are 4283 (GDA94) and 7844 (GDA2020)")
 
     # PG Options
     parser.add_argument(
@@ -148,6 +168,12 @@ def get_settings(args):
     settings['sa4_boundary_table'] = args.sa4_boundary_table
     settings['output_path'] = args.output_path
 
+    # settings['srid'] = args.srid
+    #
+    # if settings['srid'] not in (4283, 7844):
+    #     print("Invalid coordinate system (SRID) - EXITING!\nValid values are 4283 (GDA94) and 7844 (GDA2020)")
+    #     exit()
+
     # create postgres connect string
     settings['pg_host'] = args.pghost or os.getenv("PGHOST", "localhost")
     settings['pg_port'] = args.pgport or os.getenv("PGPORT", 5432)
@@ -199,6 +225,11 @@ def verify_locality_polygons(pg_cur, settings):
     start_time = datetime.now()
     pg_cur.execute(geoscape.open_sql_file("03a-verify-split-polygons.sql", settings))
     pg_cur.execute(geoscape.open_sql_file("03b-load-messy-centroids.sql", settings))
+
+    # convert messy centroids to GDA2020 if required
+    if settings['srid'] == 7844:
+        pg_cur.execute(geoscape.open_sql_file("03b-load-messy-centroids-gda2020.sql", settings))
+
     logger.info("\t- Step 3 of 8 : messy locality polygons verified : {0}".format(datetime.now() - start_time))
 
 

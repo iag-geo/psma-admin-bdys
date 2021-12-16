@@ -6,8 +6,6 @@ import math
 
 def thin_geom_sql(zoom_level):
     tolerance = get_tolerance(zoom_level, "degrees")
-
-    # return "ST_Transform(ST_Multi(ST_Union(ST_MakeValid(ST_SimplifyVW(ST_Transform(geom, 3577), {0})))), 4283)".format(tolerance,)
     return "ST_Multi(ST_Union(ST_MakeValid(ST_SimplifyVW(geom, {0}))))".format(tolerance,)
 
 
