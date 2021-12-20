@@ -62,11 +62,6 @@ def main():
     # log postgres/postgis versions being used
     geoscape.check_postgis_version(pg_cur, settings, logger)
 
-    # add Postgres functions to clean out non-polygon geometries from GeometryCollections
-    pg_cur.execute(geoscape.open_sql_file("create-polygon-intersection-function.sql", settings)
-                   .format(settings['srid']))
-    pg_cur.execute(geoscape.open_sql_file("create-multi-linestring-split-function.sql", settings))
-
     logger.info("")
 
     # get SRID of locality boundaries
@@ -81,7 +76,10 @@ def main():
         logger.fatal("Invalid coordinate system (SRID) - EXITING!\nValid values are 4283 (GDA94) and 7844 (GDA2020)")
         exit()
 
-    logger.info("")
+    # add Postgres functions to clean out non-polygon geometries from GeometryCollections
+    pg_cur.execute(geoscape.open_sql_file("create-polygon-intersection-function.sql", settings)
+                   .format(settings['srid']))
+    pg_cur.execute(geoscape.open_sql_file("create-multi-linestring-split-function.sql", settings))
 
     # let's build some clean localities!
     logger.info("")
