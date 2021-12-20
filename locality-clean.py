@@ -348,11 +348,13 @@ def qa_display_localities(pg_cur, settings):
     logger.info("\t- Step 8 of 8 : Start QA")
     start_time = datetime.now()
 
-    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, postcode, state, address_count, street_count "
+    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
+                                     "address_count, street_count "
                                  "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);", settings))
     display_qa_results("Invalid Geometries", pg_cur)
 
-    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, postcode, state, address_count, street_count "
+    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
+                                     "address_count, street_count "
                                  "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);", settings))
     display_qa_results("Empty Geometries", pg_cur)
 
@@ -363,21 +365,26 @@ def qa_display_localities(pg_cur, settings):
 
 
 def display_qa_results(purpose, pg_cur):
-    logger.info("\t\t" + purpose)
     logger.info("\t\t----------------------------------------")
+    logger.info("\t\t" + purpose)
 
-    results = pg_cur.fetchall()
+    rows = pg_cur.fetchall()
 
-    if results is not None:
-        # print the column names returned
-        logger.info("\t\t" + ",".join([desc[0] for desc in pg_cur.description]))
+    if rows is not None and len(rows) > 0:
+        logger.info("\t\t----------------------------------------------------------------------------------------"
+                    "--------------------------")
+        logger.info("\t\t| {:17} | {:40} | {:8} | {:5} | {:13} | {:12} |"
+                    .format("locality_pid", "locality_name", "postcode", "state", "address_count", "street_count"))
+        logger.info("\t\t----------------------------------------------------------------------------------------"
+                    "--------------------------")
 
-        for result in results:
-            logger.info("\t\t" + ",".join(map(str, result)))
+        for row in rows:
+            logger.info("\t\t| {:17} | {:40} | {:8} | {:5} | {:13} | {:12} |".format(row[0], row[1], row[2], row[3], row[4], row[5]))
+
+        logger.info("\t\t----------------------------------------------------------------------------------------"
+                    "--------------------------")
     else:
         logger.info("\t\t" + "No records")
-
-    logger.info("\t\t----------------------------------------")
 
 
 if __name__ == '__main__':
