@@ -35,7 +35,7 @@ UPDATE admin_bdys.temp_split_localities AS loc
 DROP TABLE IF EXISTS admin_bdys.temp_locality_centroid;
 SELECT gid,
        locality_pid,
-       ST_PointOnSurface(geom)::geometry(Point, 4283) AS geom
+       ST_PointOnSurface(geom)::geometry(Point, {0}) AS geom
   INTO admin_bdys.temp_locality_centroid
   FROM admin_bdys.temp_localities
   WHERE gid IN (SELECT gid FROM admin_bdys.temp_split_localities WHERE match_type = 'SPLIT');

@@ -63,7 +63,8 @@ def main():
     geoscape.check_postgis_version(pg_cur, settings, logger)
 
     # add Postgres functions to clean out non-polygon geometries from GeometryCollections
-    pg_cur.execute(geoscape.open_sql_file("create-polygon-intersection-function.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("create-polygon-intersection-function.sql", settings)
+                   .format(settings['srid']))
     pg_cur.execute(geoscape.open_sql_file("create-multi-linestring-split-function.sql", settings))
 
     logger.info("")
@@ -223,7 +224,7 @@ def get_split_localities(pg_cur, settings):
 
 def verify_locality_polygons(pg_cur, settings):
     start_time = datetime.now()
-    pg_cur.execute(geoscape.open_sql_file("03a-verify-split-polygons.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("03a-verify-split-polygons.sql", settings).format(settings['srid']))
     pg_cur.execute(geoscape.open_sql_file("03b-load-messy-centroids.sql", settings))
 
     # convert messy centroids to GDA2020 if required
@@ -245,13 +246,13 @@ def get_locality_state_border_gaps(pg_cur, settings):
 
 def finalise_display_localities(pg_cur, settings):
     start_time = datetime.now()
-    pg_cur.execute(geoscape.open_sql_file("05-finalise-display-localities.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("05-finalise-display-localities.sql", settings).format(settings['srid']))
     logger.info("\t- Step 5 of 8 : display localities finalised : {0}".format(datetime.now() - start_time))
 
 
 def create_display_postcodes(pg_cur, settings):
     start_time = datetime.now()
-    pg_cur.execute(geoscape.open_sql_file("06-create-display-postcodes.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("06-create-display-postcodes.sql", settings).format(settings['srid']))
     logger.info("\t- Step 6 of 8 : display postcodes created : {0}".format(datetime.now() - start_time))
 
 
