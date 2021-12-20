@@ -205,8 +205,8 @@ def get_settings(args):
 
 def create_states_and_prep_localities(settings):
     start_time = datetime.now()
-    sql_list = [geoscape.open_sql_file("01a-create-states-from-sa4s.sql", settings),
-                geoscape.open_sql_file("01b-prep-locality-boundaries.sql", settings)]
+    sql_list = [geoscape.open_sql_file("01a-create-states-from-sa4s.sql", settings).format(settings['srid']),
+                geoscape.open_sql_file("01b-prep-locality-boundaries.sql", settings).format(settings['srid'])]
     geoscape.multiprocess_list("sql", sql_list, settings, logger)
     logger.info("\t- Step 1 of 8 : state table created & localities prepped : {0}".format(datetime.now() - start_time))
 
@@ -228,7 +228,7 @@ def verify_locality_polygons(pg_cur, settings):
 
     # convert messy centroids to GDA2020 if required
     if settings['srid'] == 7844:
-        pg_cur.execute(geoscape.open_sql_file("03b-load-messy-centroids-gda2020.sql", settings))
+        pg_cur.execute(geoscape.open_sql_file("03c-load-messy-centroids-gda2020.sql", settings))
 
     logger.info("\t- Step 3 of 8 : messy locality polygons verified : {0}".format(datetime.now() - start_time))
 
