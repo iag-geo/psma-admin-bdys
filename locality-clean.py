@@ -65,7 +65,7 @@ def main():
     logger.info("")
 
     # get SRID of locality boundaries
-    sql = geoscape.prep_sql("select Find_SRID('admin_bdys_202111', 'locality_bdys', 'geom')", settings)
+    sql = geoscape.prep_sql(f"select Find_SRID('{settings['admin_bdys_schema']}', 'locality_bdys', 'geom')", settings)
     pg_cur.execute(sql)
     settings['srid'] = int(pg_cur.fetchone()[0])
     if settings['srid'] == 4283:
@@ -162,7 +162,6 @@ def get_settings(args):
 
     settings['max_concurrent_processes'] = args.max_processes
     settings['geoscape_version'] = args.geoscape_version
-    settings['gnaf_schema'] = None  # dummy setting required to make geoscape.py utilities universal with the gnaf-laoder
     settings['admin_bdys_schema'] = args.admin_schema
     settings['sa4_boundary_table'] = args.sa4_boundary_table
     settings['output_path'] = args.output_path
@@ -196,6 +195,7 @@ def get_settings(args):
                                                    .format(settings['geoscape_version']))
 
     # left over issue with the geoscape.py module - don't edit this
+    settings['gnaf_schema'] = None
     settings['raw_gnaf_schema'] = None
     settings['raw_admin_bdys_schema'] = None
 
