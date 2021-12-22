@@ -108,7 +108,7 @@ CREATE TABLE admin_bdys.postcode_bdys_display
   gid serial PRIMARY KEY,
   postcode text NULL,
   state text NOT NULL,
-  geom geometry(MultiPolygon,4283) NOT NULL
+  geom geometry(MultiPolygon,{0}) NOT NULL
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.postcode_bdys_display
   OWNER TO postgres;

@@ -187,3 +187,6 @@ INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_g
 INSERT INTO admin_bdys.temp_messy_centroids (gid, locality_pid, loc_gid, state_gid, latitude, longitude, geom) VALUES (12986, 'locd33842b82a3b', 2994, 6070, -25.55446215, 152.94438455, '0101000020BB10000020A3F265381E6340AE1E413BF18D39C0');
 
 ALTER TABLE ONLY admin_bdys.temp_messy_centroids ADD CONSTRAINT temp_messy_centroids_pkey PRIMARY KEY (gid);
+
+ANALYSE admin_bdys.temp_messy_centroids;
+

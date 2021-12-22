@@ -17,7 +17,7 @@ DROP TABLE IF EXISTS admin_bdys.temp_holes_distinct;
 CREATE TABLE admin_bdys.temp_holes_distinct (
   hole_gid serial NOT NULL PRIMARY KEY,
   state text NOT NULL,
-  geom geometry(Polygon,4283) NOT NULL,
+  geom geometry(Polygon,{0}) NOT NULL,
   locality_pid text,
   match_type text
 ) WITH (OIDS=FALSE);
@@ -94,7 +94,7 @@ SELECT DISTINCT *
     SELECT loc.locality_pid,
            hol.hole_gid,
            hol.state,
-           (ST_DumpPoints(PolygonalIntersection(loc.geom, hol.geom))).geom::geometry(Point, 4283) AS geom
+           (ST_DumpPoints(PolygonalIntersection(loc.geom, hol.geom))).geom::geometry(Point, {0}) AS geom
       FROM admin_bdys.temp_split_localities AS loc
       INNER JOIN admin_bdys.temp_holes_distinct AS hol ON (ST_Intersects(loc.geom, hol.geom) AND loc.loc_state = hol.state)
       INNER JOIN admin_bdys.temp_hole_localities AS lochol ON hol.hole_gid = lochol.hole_gid
@@ -107,7 +107,7 @@ CREATE TABLE admin_bdys.temp_hole_points
   gid serial NOT NULL PRIMARY KEY,
   hole_gid integer NOT NULL,
   state text NOT NULL,
-  geom geometry(Point,4283) NOT NULL
+  geom geometry(Point,{0}) NOT NULL
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_hole_points OWNER TO postgres;
 
@@ -152,7 +152,7 @@ SELECT DISTINCT pnt.gid,
        pnt.hole_gid,
        pnt.state,
        pnt.dist,
-       ST_MakeLine(ST_Translate(pnt.geom, sin(azimuthBA) * 0.00001, cos(azimuthBA) * 0.00001), ST_Translate(pnt.geom, sin(azimuthAB) * pnt.dist, cos(azimuthAB) * pnt.dist))::geometry(Linestring, 4283) AS geom
+       ST_MakeLine(ST_Translate(pnt.geom, sin(azimuthBA) * 0.00001, cos(azimuthBA) * 0.00001), ST_Translate(pnt.geom, sin(azimuthAB) * pnt.dist, cos(azimuthAB) * pnt.dist))::geometry(Linestring, {0}) AS geom
   INTO admin_bdys.temp_hole_lines
   FROM admin_bdys.temp_line_calcs AS pnt
   INNER JOIN admin_bdys.temp_state_border_buffers AS ste ON pnt.state = ste.state;
@@ -162,7 +162,7 @@ SELECT DISTINCT pnt.gid,
 DROP TABLE IF EXISTS admin_bdys.temp_hole_splitter_lines;
 SELECT lne.hole_gid,
        lne.state,
-       ST_Multi(ST_Union(lne.geom))::geometry(MultiLinestring, 4283) AS geom
+       ST_Multi(ST_Union(lne.geom))::geometry(MultiLinestring, {0}) AS geom
   INTO admin_bdys.temp_hole_splitter_lines
   FROM (
     SELECT gid, state, MIN(dist) AS dist FROM admin_bdys.temp_hole_lines GROUP BY gid, state
@@ -186,7 +186,7 @@ CREATE TABLE admin_bdys.temp_holes_split
   locality_pid text NULL,
   state text NOT NULL,
   type text NOT NULL,
-  geom geometry(Polygon,4283) NOT NULL
+  geom geometry(Polygon,{0}) NOT NULL
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_holes_split OWNER TO postgres;
 
@@ -194,7 +194,7 @@ INSERT INTO admin_bdys.temp_holes_split (hole_gid, state, type, geom)
 SELECT hol.hole_gid,
        hol.state,
        'SPLIT',
-       (ST_Dump(ST_SplitPolygon(hol.hole_gid, ST_Buffer(ST_Buffer(hol.geom, -0.00000001), 0.00000002), ST_Union(lne.geom)))).geom::geometry(Polygon, 4283) AS geom
+       (ST_Dump(ST_SplitPolygon(hol.hole_gid, ST_Buffer(ST_Buffer(hol.geom, -0.00000001), 0.00000002), ST_Union(lne.geom)))).geom::geometry(Polygon, {0}) AS geom
   FROM admin_bdys.temp_hole_splitter_lines AS lne
   INNER JOIN admin_bdys.temp_holes_distinct AS hol
   ON (ST_Intersects(ST_Buffer(ST_Buffer(hol.geom, -0.00000001), 0.00000002), lne.geom) AND hol.state = lne.state)
@@ -260,7 +260,7 @@ UPDATE admin_bdys.temp_split_localities AS loc
 -- manual fix to remove an unpopulated, oversized torres straight, QLD polygon -- 1
 UPDATE admin_bdys.temp_split_localities
   SET match_type = 'SPLIT'
-  WHERE ST_Intersects(ST_SetSRID(ST_MakePoint(144.227305683, -9.39107887741), 4283), geom);
+  WHERE ST_Intersects(ST_SetSRID(ST_MakePoint(144.227305683, -9.39107887741), {0}), geom);
 
 
  -- clean up full res data, removing unwanted artifacts -- 25 min -- 17731
@@ -304,7 +304,7 @@ CREATE TABLE admin_bdys.locality_bdys_display_full_res (
   locality_name text,
   postcode character(4),
   state text,
-  geom geometry(MultiPolygon, 4283),
+  geom geometry(MultiPolygon, {0}),
   area numeric(20,3)
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.locality_bdys_display_full_res OWNER TO postgres;
@@ -358,7 +358,7 @@ ANALYZE admin_bdys.locality_bdys_display_full_res;
    locality_class text NOT NULL,
    address_count integer NOT NULL,
    street_count integer NOT NULL,
-   geom geometry(MultiPolygon,4283) NOT NULL,
+   geom geometry(MultiPolygon,{0}) NOT NULL,
    CONSTRAINT locality_bdys_display_pk PRIMARY KEY (locality_pid)
  ) WITH (OIDS=FALSE);
  ALTER TABLE admin_bdys.locality_bdys_display
@@ -412,7 +412,7 @@ ANALYZE admin_bdys.locality_bdys_display_full_res;
 --  locality_class text NOT NULL,
 --  address_count integer NOT NULL,
 --  street_count integer NOT NULL,
---  geom geometry(MultiPolygon,4283) NOT NULL,
+--  geom geometry(MultiPolygon,{0}) NOT NULL,
 --  CONSTRAINT locality_bdys_display_pk PRIMARY KEY (locality_pid)
 --) WITH (OIDS=FALSE);
 --ALTER TABLE admin_bdys.locality_bdys_display

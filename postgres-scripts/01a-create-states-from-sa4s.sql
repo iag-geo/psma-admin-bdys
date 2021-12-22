@@ -7,7 +7,7 @@ CREATE UNLOGGED TABLE admin_bdys.temp_states
 (
   gid serial NOT NULL,
   state text NOT NULL,
-  geom geometry(Polygon,4283) NOT NULL,
+  geom geometry(Polygon,{0}) NOT NULL,
   area float NULL
 )
 WITH (OIDS=FALSE);
@@ -40,7 +40,7 @@ CREATE TABLE admin_bdys.temp_state_lines(
   gid SERIAL NOT NULL,
   state_gid integer NOT NULL,
   state text NOT NULL,
-  geom geometry(Linestring,4283) NOT NULL
+  geom geometry(Linestring,{0}) NOT NULL
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_state_lines OWNER TO postgres;
 
@@ -83,7 +83,7 @@ DROP TABLE IF EXISTS admin_bdys.temp_state_border_buffers;
 CREATE TABLE admin_bdys.temp_state_border_buffers(
   gid serial NOT NULL,
   state text NOT NULL,
-  geom geometry(Polygon,4283) NOT NULL
+  geom geometry(Polygon,{0}) NOT NULL
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_state_border_buffers OWNER TO postgres;
 
@@ -110,7 +110,7 @@ CREATE TABLE admin_bdys.temp_state_border_buffers_subdivided(
   new_gid serial NOT NULL,
   gid integer NOT NULL,
   state text NOT NULL,
-  geom geometry(Polygon,4283) NOT NULL
+  geom geometry(Polygon,{0}) NOT NULL
 ) WITH (OIDS=FALSE);
 ALTER TABLE admin_bdys.temp_state_border_buffers_subdivided OWNER TO postgres;
 

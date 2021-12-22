@@ -62,8 +62,23 @@ def main():
     # log postgres/postgis versions being used
     geoscape.check_postgis_version(pg_cur, settings, logger)
 
+    logger.info("")
+
+    # get SRID of locality boundaries
+    sql = geoscape.prep_sql(f"select Find_SRID('{settings['admin_bdys_schema']}', 'locality_bdys', 'geom')", settings)
+    pg_cur.execute(sql)
+    settings['srid'] = int(pg_cur.fetchone()[0])
+    if settings['srid'] == 4283:
+        logger.info(f"Locality boundary coordinate system is EPSG:{settings['srid']} (GDA94)")
+    elif settings['srid'] == 7844:
+        logger.info(f"Locality boundary coordinate system is EPSG:{settings['srid']} (GDA2020)")
+    else:
+        logger.fatal("Invalid coordinate system (SRID) - EXITING!\nValid values are 4283 (GDA94) and 7844 (GDA2020)")
+        exit()
+
     # add Postgres functions to clean out non-polygon geometries from GeometryCollections
-    pg_cur.execute(geoscape.open_sql_file("create-polygon-intersection-function.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("create-polygon-intersection-function.sql", settings)
+                   .format(settings['srid']))
     pg_cur.execute(geoscape.open_sql_file("create-multi-linestring-split-function.sql", settings))
 
     # let's build some clean localities!
@@ -95,6 +110,10 @@ def set_arguments():
         '--max-processes', type=int, default=3,
         help='Maximum number of parallel processes to use for the data load. (Set it to the number of cores on the '
              'Postgres server minus 2, limit to 12 if 16+ cores - there is minimal benefit beyond 12). Defaults to 6.')
+
+    # parser.add_argument(
+    #     "--srid", type=int, default=4283,
+    #     help="Sets the coordinate system of the input data. Valid values are 4283 (GDA94) and 7844 (GDA2020)")
 
     # PG Options
     parser.add_argument(
@@ -143,10 +162,15 @@ def get_settings(args):
 
     settings['max_concurrent_processes'] = args.max_processes
     settings['geoscape_version'] = args.geoscape_version
-    settings['gnaf_schema'] = None  # dummy setting required to make geoscape.py utilities universal with the gnaf-laoder
     settings['admin_bdys_schema'] = args.admin_schema
     settings['sa4_boundary_table'] = args.sa4_boundary_table
     settings['output_path'] = args.output_path
+
+    # settings['srid'] = args.srid
+    #
+    # if settings['srid'] not in (4283, 7844):
+    #     print("Invalid coordinate system (SRID) - EXITING!\nValid values are 4283 (GDA94) and 7844 (GDA2020)")
+    #     exit()
 
     # create postgres connect string
     settings['pg_host'] = args.pghost or os.getenv("PGHOST", "localhost")
@@ -171,6 +195,7 @@ def get_settings(args):
                                                    .format(settings['geoscape_version']))
 
     # left over issue with the geoscape.py module - don't edit this
+    settings['gnaf_schema'] = None
     settings['raw_gnaf_schema'] = None
     settings['raw_admin_bdys_schema'] = None
 
@@ -179,8 +204,8 @@ def get_settings(args):
 
 def create_states_and_prep_localities(settings):
     start_time = datetime.now()
-    sql_list = [geoscape.open_sql_file("01a-create-states-from-sa4s.sql", settings),
-                geoscape.open_sql_file("01b-prep-locality-boundaries.sql", settings)]
+    sql_list = [geoscape.open_sql_file("01a-create-states-from-sa4s.sql", settings).format(settings['srid']),
+                geoscape.open_sql_file("01b-prep-locality-boundaries.sql", settings).format(settings['srid'])]
     geoscape.multiprocess_list("sql", sql_list, settings, logger)
     logger.info("\t- Step 1 of 8 : state table created & localities prepped : {0}".format(datetime.now() - start_time))
 
@@ -197,8 +222,13 @@ def get_split_localities(pg_cur, settings):
 
 def verify_locality_polygons(pg_cur, settings):
     start_time = datetime.now()
-    pg_cur.execute(geoscape.open_sql_file("03a-verify-split-polygons.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("03a-verify-split-polygons.sql", settings).format(settings['srid']))
     pg_cur.execute(geoscape.open_sql_file("03b-load-messy-centroids.sql", settings))
+
+    # convert messy centroids to GDA2020 if required
+    if settings['srid'] == 7844:
+        pg_cur.execute(geoscape.open_sql_file("03c-load-messy-centroids-gda2020.sql", settings))
+
     logger.info("\t- Step 3 of 8 : messy locality polygons verified : {0}".format(datetime.now() - start_time))
 
 
@@ -214,13 +244,13 @@ def get_locality_state_border_gaps(pg_cur, settings):
 
 def finalise_display_localities(pg_cur, settings):
     start_time = datetime.now()
-    pg_cur.execute(geoscape.open_sql_file("05-finalise-display-localities.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("05-finalise-display-localities.sql", settings).format(settings['srid']))
     logger.info("\t- Step 5 of 8 : display localities finalised : {0}".format(datetime.now() - start_time))
 
 
 def create_display_postcodes(pg_cur, settings):
     start_time = datetime.now()
-    pg_cur.execute(geoscape.open_sql_file("06-create-display-postcodes.sql", settings))
+    pg_cur.execute(geoscape.open_sql_file("06-create-display-postcodes.sql", settings).format(settings['srid']))
     logger.info("\t- Step 6 of 8 : display postcodes created : {0}".format(datetime.now() - start_time))
 
 
@@ -247,7 +277,12 @@ def export_display_localities(pg_cur, settings):
     geoscape.run_command_line(cmd)
 
     # zip shapefile
-    output_zipfile = os.path.join(settings['output_path'], settings['shapefile_name'] + "-shapefile.zip")
+    if settings['srid'] == 4283:
+        shp_zip_path = settings['shapefile_name'] + "-shapefile.zip"
+    else:
+        shp_zip_path = settings['shapefile_name'] + "-gda2020-shapefile.zip"
+
+    output_zipfile = os.path.join(settings['output_path'], shp_zip_path)
     zf = zipfile.ZipFile(output_zipfile, mode="w")
 
     for ext in settings['shapefile_extensions']:
@@ -308,7 +343,12 @@ def export_display_localities(pg_cur, settings):
     text_file.close()
 
     # compress GeoJSON
-    zipfile.ZipFile(settings['geojson_export_path'] + ".zip", mode="w") \
+    if settings['srid'] == 4283:
+        geojson_zip_path = settings['geojson_export_path'].replace(".geojson", "-geojson.zip")
+    else:
+        geojson_zip_path = settings['geojson_export_path'].replace(".geojson", "-gda2020-geojson.zip")
+
+    zipfile.ZipFile(geojson_zip_path, mode="w")\
         .write(settings['geojson_export_path'], compress_type=zipfile.ZIP_DEFLATED)
 
     logger.info("\t- Step 7 of 8 : display localities exported to GeoJSON : {0}".format(datetime.now() - start_time))
@@ -318,11 +358,13 @@ def qa_display_localities(pg_cur, settings):
     logger.info("\t- Step 8 of 8 : Start QA")
     start_time = datetime.now()
 
-    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, postcode, state, address_count, street_count "
+    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
+                                     "address_count, street_count "
                                  "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);", settings))
     display_qa_results("Invalid Geometries", pg_cur)
 
-    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, postcode, state, address_count, street_count "
+    pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
+                                     "address_count, street_count "
                                  "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);", settings))
     display_qa_results("Empty Geometries", pg_cur)
 
@@ -333,21 +375,26 @@ def qa_display_localities(pg_cur, settings):
 
 
 def display_qa_results(purpose, pg_cur):
-    logger.info("\t\t" + purpose)
     logger.info("\t\t----------------------------------------")
+    logger.info("\t\t" + purpose)
 
-    results = pg_cur.fetchall()
+    rows = pg_cur.fetchall()
 
-    if results is not None:
-        # print the column names returned
-        logger.info("\t\t" + ",".join([desc[0] for desc in pg_cur.description]))
+    if rows is not None and len(rows) > 0:
+        logger.info("\t\t----------------------------------------------------------------------------------------"
+                    "--------------------------")
+        logger.info("\t\t| {:17} | {:40} | {:8} | {:5} | {:13} | {:12} |"
+                    .format("locality_pid", "locality_name", "postcode", "state", "address_count", "street_count"))
+        logger.info("\t\t----------------------------------------------------------------------------------------"
+                    "--------------------------")
 
-        for result in results:
-            logger.info("\t\t" + ",".join(map(str, result)))
+        for row in rows:
+            logger.info("\t\t| {:17} | {:40} | {:8} | {:5} | {:13} | {:12} |".format(row[0], row[1], row[2], row[3], row[4], row[5]))
+
+        logger.info("\t\t----------------------------------------------------------------------------------------"
+                    "--------------------------")
     else:
         logger.info("\t\t" + "No records")
-
-    logger.info("\t\t----------------------------------------")
 
 
 if __name__ == '__main__':
