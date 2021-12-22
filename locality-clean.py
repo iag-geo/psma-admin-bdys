@@ -277,7 +277,12 @@ def export_display_localities(pg_cur, settings):
     geoscape.run_command_line(cmd)
 
     # zip shapefile
-    output_zipfile = os.path.join(settings['output_path'], settings['shapefile_name'] + "-shapefile.zip")
+    if settings['srid'] == 4283:
+        shp_zip_path = settings['shapefile_name'] + "-shapefile.zip"
+    else:
+        shp_zip_path = settings['shapefile_name'] + "-gda2020-shapefile.zip"
+
+    output_zipfile = os.path.join(settings['output_path'], shp_zip_path)
     zf = zipfile.ZipFile(output_zipfile, mode="w")
 
     for ext in settings['shapefile_extensions']:
@@ -338,7 +343,12 @@ def export_display_localities(pg_cur, settings):
     text_file.close()
 
     # compress GeoJSON
-    zipfile.ZipFile(settings['geojson_export_path'] + ".zip", mode="w") \
+    if settings['srid'] == 4283:
+        geojson_zip_path = settings['geojson_export_path'].replace(".geojson", "-geojson.zip")
+    else:
+        geojson_zip_path = settings['geojson_export_path'].replace(".geojson", "-gda2020-geojson.zip")
+
+    zipfile.ZipFile(geojson_zip_path, mode="w")\
         .write(settings['geojson_export_path'], compress_type=zipfile.ZIP_DEFLATED)
 
     logger.info("\t- Step 7 of 8 : display localities exported to GeoJSON : {0}".format(datetime.now() - start_time))
