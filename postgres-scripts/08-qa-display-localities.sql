@@ -5,8 +5,8 @@ SELECT loc.locality_pid,
        loc.state,
        loc.address_count,
        loc.street_count
-  FROM admin_bdys_gda2020.locality_bdys AS loc
-  LEFT OUTER JOIN admin_bdys_gda2020.locality_bdys_display AS bdy
+  FROM admin_bdys.locality_bdys AS loc
+  LEFT OUTER JOIN admin_bdys.locality_bdys_display AS bdy
   ON loc.locality_pid = bdy.locality_pid
   WHERE bdy.locality_pid IS NULL
   ORDER BY loc.state,
