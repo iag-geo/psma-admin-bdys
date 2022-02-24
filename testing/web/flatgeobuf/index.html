@@ -75,7 +75,7 @@
             // Use flatgeobuf JavaScript API to iterate features as geojson.
             // Because we specify a bounding box, flatgeobuf will only fetch the relevant subset of data,
             // rather than the entire file.
-            let iter = flatgeobuf.deserialize('http://minus34.com/opendata/geoscape-202111/flatgeobuf/locality-bdys-display-202111.fgb', fgBoundingBox(), handleHeaderMeta);
+            let iter = flatgeobuf.deserialize('http://minus34.com/opendata/geoscape-202202/flatgeobuf/locality-bdys-display-202202.fgb', fgBoundingBox(), handleHeaderMeta);
             for await (let feature of iter) {
                 // Leaflet styling
                 const defaultStyle = {
