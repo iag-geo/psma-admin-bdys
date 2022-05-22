@@ -23,8 +23,8 @@ The cleaned and thinned localities have a reduced precision of 1-2m; however thi
 ### I Just Want the Data!
 
 You can run the script to get the result or download the data from here:
-- [Shapefile](https://github.com/iag-geo/psma-admin-bdys/releases/download/202202/locality-bdys-display-202202-shapefile.zip) (~40Mb) 
-- [GeoJSON](https://github.com/iag-geo/psma-admin-bdys/releases/download/202202/locality-bdys-display-202202.geojson.zip) (~30Mb) 
+- [Shapefile](https://github.com/iag-geo/psma-admin-bdys/releases/download/202205/locality-bdys-display-202205-shapefile.zip) (~40Mb) 
+- [GeoJSON](https://github.com/iag-geo/psma-admin-bdys/releases/download/202205/locality-bdys-display-202205.geojson.zip) (~30Mb) 
 
 #### Data License
 
