@@ -2,7 +2,7 @@
 -- remove repeated points so you can focus on more serious issues
 DROP TABLE IF EXISTS testing.locality_bdys_display;
 CREATE TABLE testing.locality_bdys_display AS
-  SELECT locality_pid, ST_RemoveRepeatedPoints(geom) AS geom FROM admin_bdys_202205.locality_bdys_display;
+  SELECT locality_pid, ST_RemoveRepeatedPoints(geom) AS geom FROM admin_bdys_202208.locality_bdys_display;
 
 ANALYSE testing.locality_bdys_display;
 
@@ -98,7 +98,7 @@ CREATE TABLE testing.locality_bdys_display_lines AS
 WITH points AS (
 	SELECT locality_pid,
 				 (ST_Dump(ST_Points(geom))).geom  AS geom
-	FROM admin_bdys_202205.locality_bdys_display
+	FROM admin_bdys_202208.locality_bdys_display
   WHERE locality_pid = 'ACT110'
 ), coords AS (
 	SELECT row_number() OVER (PARTITION BY locality_pid) AS point_seq,
@@ -135,8 +135,8 @@ select postgis_version();
 
 
 -- Total points
-SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_202205.locality_bdys;         -- 12,938,094
-SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_202205.locality_bdys_display; --  4,392,196 (66% reduction)
+SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_202208.locality_bdys;         -- 12,938,094
+SELECT SUM(ST_NPoints(geom)) FROM admin_bdys_202208.locality_bdys_display; --  4,392,196 (66% reduction)
 
 
 -- nothing below here works....
