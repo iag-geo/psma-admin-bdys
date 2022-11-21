@@ -215,7 +215,7 @@ def get_split_localities(pg_cur, settings):
     start_time = datetime.now()
     sql = geoscape.open_sql_file("02-split-localities-by-state-borders.sql", settings)
     sql_list = geoscape.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'], "temp_localities", "loc", "gid",
-                                        settings, logger)
+                                            settings, logger)
     geoscape.multiprocess_list("sql", sql_list, settings, logger)
     logger.info("\t- Step 2 of 8 : localities split by state : {0}".format(datetime.now() - start_time))
 
@@ -237,7 +237,7 @@ def get_locality_state_border_gaps(pg_cur, settings):
     start_time = datetime.now()
     sql = geoscape.open_sql_file("04-create-holes-along-borders.sql", settings)
     sql_list = geoscape.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'],
-                                        "temp_state_border_buffers_subdivided", "ste", "new_gid", settings, logger)
+                                            "temp_state_border_buffers_subdivided", "ste", "new_gid", settings, logger)
     geoscape.multiprocess_list("sql", sql_list, settings, logger)
     logger.info("\t- Step 4 of 8 : locality holes created : {0}".format(datetime.now() - start_time))
 
@@ -303,8 +303,8 @@ def export_display_localities(pg_cur, settings):
 
     # Export as GeoJSON FeatureCollection
     sql = geoscape.prep_sql("SELECT gid, locality_pid, locality_name, COALESCE(postcode, '') AS postcode, state, "
-                        "locality_class, address_count, street_count, ST_AsGeoJSON(geom, 5, 0) AS geom "
-                        "FROM {0}.locality_bdys_display".format(settings['admin_bdys_schema']), settings)
+                            "locality_class, address_count, street_count, ST_AsGeoJSON(geom, 5, 0) AS geom "
+                            "FROM {0}.locality_bdys_display".format(settings['admin_bdys_schema']), settings)
     pg_cur.execute(sql)
 
     # Create the GeoJSON output with an array of dictionaries containing the field names and values
@@ -360,12 +360,12 @@ def qa_display_localities(pg_cur, settings):
 
     pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
                                      "address_count, street_count "
-                                 "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);", settings))
+                                     "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);", settings))
     display_qa_results("Invalid Geometries", pg_cur)
 
     pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
                                      "address_count, street_count "
-                                 "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);", settings))
+                                     "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);", settings))
     display_qa_results("Empty Geometries", pg_cur)
 
     pg_cur.execute(geoscape.open_sql_file("08-qa-display-localities.sql", settings))
@@ -389,7 +389,8 @@ def display_qa_results(purpose, pg_cur):
                     "--------------------------")
 
         for row in rows:
-            logger.info("\t\t| {:17} | {:40} | {:8} | {:5} | {:13} | {:12} |".format(row[0], row[1], row[2], row[3], row[4], row[5]))
+            logger.info("\t\t| {:17} | {:40} | {:8} | {:5} | {:13} | {:12} |"
+                        .format(row[0], row[1], row[2], row[3], row[4], row[5]))
 
         logger.info("\t\t----------------------------------------------------------------------------------------"
                     "--------------------------")

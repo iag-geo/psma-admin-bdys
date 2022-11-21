@@ -38,7 +38,5 @@ for old_line in input_file.readlines():
     except:
         pass
 
-
 output_file.close()
 input_file.close()
-
