@@ -22,7 +22,7 @@
 #      (see https://github.com/minus34/gnaf-loader)
 #  - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5, 9.6 & 10.0 on macOS)
 #  - PostGIS 2.3+
-#  - Python 2.7 or 3.6 with Psycopg2 2.7.x
+#  - Python 2.7 or 3.6 with Psycopg 3.x
 #
 # TO DO:
 #  - Create postcode boundaries by aggregating the final localities by their postcode (derived from raw GNAF)
@@ -36,7 +36,7 @@ import os
 import pathlib
 import platform
 import geoscape
-import psycopg2
+import psycopg
 import zipfile
 
 from datetime import datetime
@@ -51,8 +51,8 @@ def main():
     settings = get_settings(args)
     # connect to Postgres
     try:
-        pg_conn = psycopg2.connect(settings['pg_connect_string'])
-    except psycopg2.Error:
+        pg_conn = psycopg.connect(settings['pg_connect_string'])
+    except psycopg.Error:
         logger.fatal("Unable to connect to database\nACTION: Check your Postgres parameters and/or database security")
         return False
 

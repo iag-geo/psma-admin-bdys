@@ -2,7 +2,7 @@ import multiprocessing
 import math
 import os
 import platform
-import psycopg2
+import psycopg
 import subprocess
 import sys
 
@@ -35,7 +35,7 @@ def multiprocess_list(mp_type, work_list, settings, logger):
 def run_sql_multiprocessing(args):
     the_sql = args[0]
     settings = args[1]
-    pg_conn = psycopg2.connect(settings['pg_connect_string'])
+    pg_conn = psycopg.connect(settings['pg_connect_string'])
     pg_conn.autocommit = True
     pg_cur = pg_conn.cursor()
 
@@ -203,14 +203,14 @@ def check_postgis_version(pg_cur, settings, logger):
 
 
 def check_python_version(logger):
-    # get python and psycopg2 version
+    # get python and psycopg version
     python_version = sys.version.split("(")[0].strip()
-    psycopg2_version = psycopg2.__version__.split("(")[0].strip()
+    psycopg_version = psycopg.__version__.split("(")[0].strip()
     os_version = platform.system() + " " + platform.version().strip()
 
     logger.info("")
-    logger.info("Running Python {0} with Psycopg2 {1}"
-                .format(python_version, psycopg2_version))
+    logger.info("Running Python {0} with Psycopg {1}"
+                .format(python_version, psycopg_version))
     logger.info("on {0}".format(os_version))
 
 
@@ -246,7 +246,7 @@ def intermediate_shapefile_load_step(args):
     delete_table = work_dict['delete_table']
     spatial = work_dict['spatial']
 
-    pg_conn = psycopg2.connect(settings['pg_connect_string'])
+    pg_conn = psycopg.connect(settings['pg_connect_string'])
     pg_conn.autocommit = True
     pg_cur = pg_conn.cursor()
 

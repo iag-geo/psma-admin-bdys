@@ -1,11 +1,11 @@
 
-import psycopg2
+import psycopg
 
 # create postgres connect string
 pg_connect_string = "dbname='geo' host='localhost' port='5432' user='postgres' password='password'"
 
 # connect to Postgres
-pg_conn = psycopg2.connect(pg_connect_string)
+pg_conn = psycopg.connect(pg_connect_string)
 pg_conn.autocommit = True
 pg_cur = pg_conn.cursor()
 

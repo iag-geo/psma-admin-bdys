@@ -35,7 +35,7 @@ Incorporates or developed using Administrative Boundaries © [Geoscape Australia
 - You will need to run the [gnaf-loader](https://github.com/minus34/gnaf-loader) script to load the required Admin Bdy tables into Postgres
 - Postgres 10.x and above
 - PostGIS 2.1+
-- Python 2.7 or 3.5+ with Psycopg2 2.6+
+- Python 2.7 or 3.5+ with psycopg 2.6+
 
 ### Missing localities
 Trimming the boundaries to the coastline removes a small number of bay or estuary based localities.  These have very few G-NAF addresses.
