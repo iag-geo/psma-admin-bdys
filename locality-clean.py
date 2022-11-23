@@ -22,7 +22,7 @@
 #      (see https://github.com/minus34/gnaf-loader)
 #  - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5, 9.6 & 10.0 on macOS)
 #  - PostGIS 2.3+
-#  - Python 2.7 or 3.6 with Psycopg2 2.7.x
+#  - Python 2.7 or 3.6 with Psycopg 3.x
 #
 # TO DO:
 #  - Create postcode boundaries by aggregating the final localities by their postcode (derived from raw GNAF)
@@ -36,7 +36,7 @@ import os
 import pathlib
 import platform
 import geoscape
-import psycopg2
+import psycopg
 import zipfile
 
 from datetime import datetime
@@ -51,8 +51,8 @@ def main():
     settings = get_settings(args)
     # connect to Postgres
     try:
-        pg_conn = psycopg2.connect(settings['pg_connect_string'])
-    except psycopg2.Error:
+        pg_conn = psycopg.connect(settings['pg_connect_string'])
+    except psycopg.Error:
         logger.fatal("Unable to connect to database\nACTION: Check your Postgres parameters and/or database security")
         return False
 
@@ -215,7 +215,7 @@ def get_split_localities(pg_cur, settings):
     start_time = datetime.now()
     sql = geoscape.open_sql_file("02-split-localities-by-state-borders.sql", settings)
     sql_list = geoscape.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'], "temp_localities", "loc", "gid",
-                                        settings, logger)
+                                            settings, logger)
     geoscape.multiprocess_list("sql", sql_list, settings, logger)
     logger.info("\t- Step 2 of 8 : localities split by state : {0}".format(datetime.now() - start_time))
 
@@ -237,7 +237,7 @@ def get_locality_state_border_gaps(pg_cur, settings):
     start_time = datetime.now()
     sql = geoscape.open_sql_file("04-create-holes-along-borders.sql", settings)
     sql_list = geoscape.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'],
-                                        "temp_state_border_buffers_subdivided", "ste", "new_gid", settings, logger)
+                                            "temp_state_border_buffers_subdivided", "ste", "new_gid", settings, logger)
     geoscape.multiprocess_list("sql", sql_list, settings, logger)
     logger.info("\t- Step 4 of 8 : locality holes created : {0}".format(datetime.now() - start_time))
 
@@ -303,8 +303,8 @@ def export_display_localities(pg_cur, settings):
 
     # Export as GeoJSON FeatureCollection
     sql = geoscape.prep_sql("SELECT gid, locality_pid, locality_name, COALESCE(postcode, '') AS postcode, state, "
-                        "locality_class, address_count, street_count, ST_AsGeoJSON(geom, 5, 0) AS geom "
-                        "FROM {0}.locality_bdys_display".format(settings['admin_bdys_schema']), settings)
+                            "locality_class, address_count, street_count, ST_AsGeoJSON(geom, 5, 0) AS geom "
+                            "FROM {0}.locality_bdys_display".format(settings['admin_bdys_schema']), settings)
     pg_cur.execute(sql)
 
     # Create the GeoJSON output with an array of dictionaries containing the field names and values
@@ -360,12 +360,12 @@ def qa_display_localities(pg_cur, settings):
 
     pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
                                      "address_count, street_count "
-                                 "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);", settings))
+                                     "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);", settings))
     display_qa_results("Invalid Geometries", pg_cur)
 
     pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
                                      "address_count, street_count "
-                                 "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);", settings))
+                                     "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);", settings))
     display_qa_results("Empty Geometries", pg_cur)
 
     pg_cur.execute(geoscape.open_sql_file("08-qa-display-localities.sql", settings))
@@ -389,7 +389,8 @@ def display_qa_results(purpose, pg_cur):
                     "--------------------------")
 
         for row in rows:
-            logger.info("\t\t| {:17} | {:40} | {:8} | {:5} | {:13} | {:12} |".format(row[0], row[1], row[2], row[3], row[4], row[5]))
+            logger.info("\t\t| {:17} | {:40} | {:8} | {:5} | {:13} | {:12} |"
+                        .format(row[0], row[1], row[2], row[3], row[4], row[5]))
 
         logger.info("\t\t----------------------------------------------------------------------------------------"
                     "--------------------------")

@@ -1,11 +1,11 @@
 
-import psycopg2
+import psycopg
 
 # create postgres connect string
 pg_connect_string = "dbname='geo' host='localhost' port='5432' user='postgres' password='password'"
 
 # connect to Postgres
-pg_conn = psycopg2.connect(pg_connect_string)
+pg_conn = psycopg.connect(pg_connect_string)
 pg_conn.autocommit = True
 pg_cur = pg_conn.cursor()
 
@@ -21,7 +21,7 @@ for old_line in input_file.readlines():
     old_locality_pid = old_line.split("'")[1]
 
     sql = """SELECT locality_pid
-             FROM raw_gnaf_202208.locality_pid_linkage
+             FROM raw_gnaf_202211.locality_pid_linkage
              WHERE ab_locality_pid = '{}'""".format(old_locality_pid)
     pg_cur.execute(sql)
 
@@ -38,7 +38,5 @@ for old_line in input_file.readlines():
     except:
         pass
 
-
 output_file.close()
 input_file.close()
-

@@ -23,8 +23,8 @@ The cleaned and thinned localities have a reduced precision of 1-2m; however thi
 ### I Just Want the Data!
 
 You can run the script to get the result or download the data from here:
-- [Shapefile](https://github.com/iag-geo/psma-admin-bdys/releases/download/202208/locality-bdys-display-202208-shapefile.zip) (~40Mb) 
-- [GeoJSON](https://github.com/iag-geo/psma-admin-bdys/releases/download/202208/locality-bdys-display-202208.geojson.zip) (~30Mb) 
+- [Shapefile](https://github.com/iag-geo/psma-admin-bdys/releases/download/202211/locality-bdys-display-202211-shapefile.zip) (~40Mb) 
+- [GeoJSON](https://github.com/iag-geo/psma-admin-bdys/releases/download/202211/locality-bdys-display-202211.geojson.zip) (~30Mb) 
 
 #### Data License
 
@@ -35,7 +35,7 @@ Incorporates or developed using Administrative Boundaries © [Geoscape Australia
 - You will need to run the [gnaf-loader](https://github.com/minus34/gnaf-loader) script to load the required Admin Bdy tables into Postgres
 - Postgres 10.x and above
 - PostGIS 2.1+
-- Python 2.7 or 3.5+ with Psycopg2 2.6+
+- Python 2.7 or 3.5+ with psycopg 2.6+
 
 ### Missing localities
 Trimming the boundaries to the coastline removes a small number of bay or estuary based localities.  These have very few G-NAF addresses.
