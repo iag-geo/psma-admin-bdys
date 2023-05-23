@@ -4,7 +4,7 @@ create table testing.postcode_lines as
 with pc as (
     select postcode,
            st_collect(geom) as geom
-    from admin_bdys_202302.postcode_bdys_display
+    from admin_bdys_202305.postcode_bdys_display
     where postcode is not null
     group by postcode
 ), pnt as (
