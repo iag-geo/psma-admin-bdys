@@ -23,8 +23,8 @@ The cleaned and thinned localities have a reduced precision of 1-2m; however thi
 ### I Just Want the Data!
 
 You can run the script to get the result or download the data from here:
-- [Shapefile](https://minus34.com/opendata/geoscape-202308/locality-bdys-display-202308-shapefile.zip) (~40Mb) 
-- [GeoJSON](https://minus34.com/opendata/geoscape-202308/locality-bdys-display-202308-geojson.zip) (~30Mb) 
+- [Shapefile](https://minus34.com/opendata/geoscape-202311/locality-bdys-display-202311-shapefile.zip) (~40Mb) 
+- [GeoJSON](https://minus34.com/opendata/geoscape-202311/locality-bdys-display-202311-geojson.zip) (~30Mb) 
 
 #### Data License
 
