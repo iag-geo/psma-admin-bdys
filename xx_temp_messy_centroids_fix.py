@@ -21,7 +21,7 @@ for old_line in input_file.readlines():
     old_locality_pid = old_line.split("'")[1]
 
     sql = """SELECT locality_pid
-             FROM raw_gnaf_202402.locality_pid_linkage
+             FROM raw_gnaf_202405.locality_pid_linkage
              WHERE ab_locality_pid = '{}'""".format(old_locality_pid)
     pg_cur.execute(sql)
 
