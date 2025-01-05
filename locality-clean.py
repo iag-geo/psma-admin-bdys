@@ -24,9 +24,6 @@
 #  - PostGIS 2.3+
 #  - Python 2.7 or 3.6 with Psycopg 3.x
 #
-# TO DO:
-#  - Create postcode boundaries by aggregating the final localities by their postcode (derived from raw GNAF)
-#
 # *********************************************************************************************************************
 
 import argparse
