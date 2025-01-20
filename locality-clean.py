@@ -20,9 +20,9 @@
 # Pre-requisites
 #  - Either: run the gnaf-loader Python script (30-90 mins); or load the gnaf-loader admin-bdys schema into Postgres
 #      (see https://github.com/minus34/gnaf-loader)
-#  - Postgres 9.x (tested on 9.3, 9.4 & 9.5 on Windows and 9.5, 9.6 & 10.0 on macOS)
-#  - PostGIS 2.3+
-#  - Python 2.7 or 3.6 with Psycopg 3.x
+#  - Postgres 14.x
+#  - PostGIS 3+
+#  - Python 3.11 with Psycopg
 #
 # *********************************************************************************************************************
 
