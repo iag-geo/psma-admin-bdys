@@ -142,9 +142,9 @@ def set_arguments():
         help='Destination schema name to store final admin boundary tables in. Defaults to \'admin_bdys_'
              + geoscape_version + '\'.')
     parser.add_argument(
-        '--sa4-boundary-table', default='abs_2016_sa4',
+        '--sa4-boundary-table', default='abs_2026_sa4',
         help='SA4 table name used to create state boundaries. '
-             'Defaults to \'abs_2016_sa4\'. Other options are: \'abs_2011_sa4\'')
+             'Defaults to \'abs_2026_sa4\'. Other options are: \'abs_2011_sa4\'')
     # output directory
     parser.add_argument(
         '--output-path', required=True,
