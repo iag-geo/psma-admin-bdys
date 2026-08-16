@@ -102,17 +102,8 @@ max_processes = args.max_processes
 geoscape_version = args.geoscape_version
 sa4_boundary_table = args.sa4_boundary_table
 output_path = args.output_path
+log_path = args.log_path
 
-# srid = args.srid
-
-# if srid not in (4283, 7844):
-#     print("Invalid coordinate system (SRID) - EXITING!\nValid values are 4283 (GDA94) and 7844 (GDA2020)")
-#     sys.exit()
-
-# use SQL identifer here to avoid SQL injection
-# raw_gnaf_schema = sql.Identifier(args.raw_gnaf_schema or "raw_gnaf_" + geoscape_version)
-# raw_admin_bdys_schema = sql.Identifier(args.raw_admin_schema or "raw_admin_bdys_" + geoscape_version)
-# gnaf_schema = sql.Identifier(args.gnaf_schema or "gnaf_" + geoscape_version)
 admin_bdys_schema = sql.Identifier(args.admin_schema or "admin_bdys_" + geoscape_version)
 
 # create postgres connect string
@@ -133,7 +124,6 @@ shapefile_name = f"locality-bdys-display-{geoscape_version}"
 shapefile_extensions = [".cpg", ".dbf", ".prj", ".shp", ".shx"]
 
 geojson_export_path = os.path.join(output_path, f"locality-bdys-display-{geoscape_version}.geojson")
-log_path = args.log_path
 
 # get Postgres, PostGIS & GEOS versions and flag if ST_Subdivide is supported
 

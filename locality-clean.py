@@ -303,8 +303,6 @@ def display_qa_results(purpose: str, pg_cur: psycopg.Cursor):
 if __name__ == '__main__':
     logger = logging.getLogger()
 
-    logger = logging.getLogger()
-
     file_time = datetime.now().astimezone()
     file_time_str = file_time.strftime("%Y-%m-%d-%H-%M-%S")
 
