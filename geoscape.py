@@ -1,20 +1,23 @@
-import multiprocessing
+import logging
 import math
+import multiprocessing
 import os
 import platform
-import psycopg
 import subprocess
 import sys
+from typing import Any
+
+import psycopg
 
 
 # takes a list of sql queries or command lines and runs them using multiprocessing
-def multiprocess_list(mp_type, work_list, settings, logger):
-    pool = multiprocessing.Pool(processes=settings['max_concurrent_processes'])
+def multiprocess_list(mp_type: str, work_list: list[str], logger: logging.Logger) -> None:
+    pool = multiprocessing.Pool(processes=settings.max_processes)
 
     num_jobs = len(work_list)
 
     if mp_type == "sql":
-        results = pool.imap_unordered(run_sql_multiprocessing, [[w, settings] for w in work_list])
+        results = pool.imap_unordered(run_sql_multiprocessing, work_list)
     else:
         results = pool.imap_unordered(run_command_line, work_list)
 
