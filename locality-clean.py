@@ -213,7 +213,9 @@ def get_split_localities(pg_cur, settings):
     sql = geoscape.open_sql_file("02-split-localities-by-state-borders.sql", settings)
     sql_list = geoscape.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'], "temp_localities", "loc", "gid",
                                             settings, logger)
-    geoscape.multiprocess_list("sql", sql_list, settings, logger)
+    if sql_list:
+        geoscape.multiprocess_list("sql", sql_list, settings, logger)
+    
     logger.info("\t- Step 2 of 8 : localities split by state : {0}".format(datetime.now() - start_time))
 
 
@@ -235,7 +237,9 @@ def get_locality_state_border_gaps(pg_cur, settings):
     sql = geoscape.open_sql_file("04-create-holes-along-borders.sql", settings)
     sql_list = geoscape.split_sql_into_list(pg_cur, sql, settings['admin_bdys_schema'],
                                             "temp_state_border_buffers_subdivided", "ste", "new_gid", settings, logger)
-    geoscape.multiprocess_list("sql", sql_list, settings, logger)
+    if sql_list:
+        geoscape.multiprocess_list("sql", sql_list, settings, logger)
+    
     logger.info("\t- Step 4 of 8 : locality holes created : {0}".format(datetime.now() - start_time))
 
 
