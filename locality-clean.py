@@ -34,8 +34,8 @@ import platform
 import sys
 import zipfile
 from datetime import datetime
+from typing import Any
 
-# from typing import Any
 import psycopg
 
 import geoscape
@@ -101,7 +101,7 @@ def main():
     get_locality_state_border_gaps(pg_cur)
     finalise_display_localities(pg_cur, srid)
     create_display_postcodes(pg_cur, srid)
-    export_display_localities(pg_cur)
+    export_display_localities(pg_cur, srid)
     qa_display_localities(pg_cur)
 
     pg_cur.close()
@@ -157,13 +157,13 @@ def get_locality_state_border_gaps(pg_cur: psycopg.Cursor):
 
 def finalise_display_localities(pg_cur: psycopg.Cursor, srid: int):
     start_time = datetime.now().astimezone()
-    pg_cur.execute(geoscape.open_sql_file("05-finalise-display-localities.sql").format(srid))
+    pg_cur.execute(geoscape.open_sql_file("05-finalise-display-localities.sql").format(srid)) # type: ignore
     logger.info(f"\t- Step 5 of 8 : display localities finalised : {datetime.now().astimezone() - start_time}")
 
 
 def create_display_postcodes(pg_cur: psycopg.Cursor, srid: int):
     start_time = datetime.now().astimezone()
-    pg_cur.execute(geoscape.open_sql_file("06-create-display-postcodes.sql").format(srid))
+    pg_cur.execute(geoscape.open_sql_file("06-create-display-postcodes.sql").format(srid)) # type: ignore
     logger.info(f"\t- Step 6 of 8 : display postcodes created : {datetime.now().astimezone() - start_time}")
 
 
@@ -212,33 +212,28 @@ def export_display_localities(pg_cur: psycopg.Cursor, srid: int):
     start_time = datetime.now().astimezone()
 
     # Export as GeoJSON FeatureCollection
-    sql_string = geoscape.prep_sql("SELECT gid, locality_pid, locality_name, COALESCE(postcode, '') AS postcode, state, "
-                            "locality_class, address_count, street_count, ST_AsGeoJSON(geom, 5, 0) AS geom "
-                            "FROM %s.locality_bdys_display")
-    pg_cur.execute(sql_string, (settings.admin_bdys_schema,))
+    sql_string = geoscape.prep_sql(f"SELECT gid, locality_pid, locality_name, COALESCE(postcode, '') AS postcode, state, locality_class, address_count, street_count, ST_AsGeoJSON(geom, 5, 0) AS geom FROM {settings.admin_bdys_schema}.locality_bdys_display")
+    pg_cur.execute(sql_string) # type: ignore
 
     # Create the GeoJSON output with an array of dictionaries containing the field names and values
 
     # get column names from cursor
-    column_names = [desc[0] for desc in pg_cur.description]
+    column_names = [desc[0] for desc in pg_cur.description] # type: ignore
 
-    json_dicts = []
+    json_dicts = list[dict[str, str]]()
     row = pg_cur.fetchone()
 
     if row is not None:
         while row is not None:
-            rec = {}
-            props = {}
-            i = 0
+            rec = dict[str, Any]()
+            props = dict[str, str]()
             rec["type"] = "Feature"
 
-            for column in column_names:
+            for i, column in enumerate(column_names, start=0):
                 if column == "geometry" or column == "geom":
                     rec["geometry"] = row[i]
                 else:
                     props[column] = row[i]
-
-                i += 1
 
             rec["properties"] = props
             json_dicts.append(rec)
@@ -246,11 +241,10 @@ def export_display_localities(pg_cur: psycopg.Cursor, srid: int):
 
     gj = json.dumps(json_dicts).replace("\\", "").replace('"{', '{').replace('}"', '}')
 
-    geojson = ''.join(['{"type":"FeatureCollection","features":', gj, '}'])
+    geojson = f'{{"type":"FeatureCollection","features":{gj}}}'
 
-    text_file = open(settings.geojson_export_path, "w")
-    text_file.write(geojson)
-    text_file.close()
+    with open(settings.geojson_export_path, "w") as text_file:
+        text_file.write(geojson)
 
     # compress GeoJSON
     if srid == 4283:
@@ -270,15 +264,15 @@ def qa_display_localities(pg_cur: psycopg.Cursor):
 
     pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
                                      "address_count, street_count "
-                                     "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);"))
+                                     "FROM admin_bdys.locality_bdys_display WHERE NOT ST_IsValid(geom);")) # type: ignore
     display_qa_results("Invalid Geometries", pg_cur)
 
     pg_cur.execute(geoscape.prep_sql("SELECT locality_pid, locality_name, coalesce(postcode, '') as postcode, state, "
                                      "address_count, street_count "
-                                     "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);"))
+                                     "FROM admin_bdys.locality_bdys_display WHERE ST_IsEmpty(geom);")) # type: ignore
     display_qa_results("Empty Geometries", pg_cur)
 
-    pg_cur.execute(geoscape.open_sql_file("08-qa-display-localities.sql"))
+    pg_cur.execute(geoscape.open_sql_file("08-qa-display-localities.sql")) # type: ignore
     display_qa_results("Dropped Localities", pg_cur)
 
     logger.info(f"\t- Step 8 of 8 : display localities qa'd : {datetime.now().astimezone() - start_time}")
@@ -288,7 +282,7 @@ def display_qa_results(purpose: str, pg_cur: psycopg.Cursor):
     logger.info("\t\t----------------------------------------")
     logger.info("\t\t" + purpose)
 
-    rows = int(pg_cur.fetchall()) # type: ignore
+    rows = pg_cur.fetchall() # type: ignore
 
     if rows:
         logger.info("\t\t----------------------------------------------------------------------------------------"
