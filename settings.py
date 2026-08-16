@@ -89,13 +89,16 @@ parser.add_argument(
 parser.add_argument(
     '--output-path', required=True,
     help='Local path where the Shapefile and GeoJSON files will be output.')
-    
+parser.add_argument(
+    "--log-path",
+    help="Optional directory for the loader log file. Defaults to a log file beside load-gnaf.py.")
+
 # global var containing all input parameters
 args = parser.parse_args()
 
 # assign parameters to global settings
 
-max_concurrent_processes = args.max_processes
+max_processes = args.max_processes
 geoscape_version = args.geoscape_version
 sa4_boundary_table = args.sa4_boundary_table
 output_path = args.output_path
@@ -130,6 +133,7 @@ shapefile_name = f"locality-bdys-display-{geoscape_version}"
 shapefile_extensions = [".cpg", ".dbf", ".prj", ".shp", ".shx"]
 
 geojson_export_path = os.path.join(output_path, f"locality-bdys-display-{geoscape_version}.geojson")
+log_path = args.log_path
 
 # get Postgres, PostGIS & GEOS versions and flag if ST_Subdivide is supported
 
