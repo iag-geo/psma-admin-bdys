@@ -4,33 +4,28 @@ import argparse
 import os
 import platform
 import sys
-from datetime import datetime
+from datetime import date
 
 import psycopg
 
 
-# get latest Geoscape release version as YYYYMM, as of the date provided, as well as the prev. version 3 months prior
-def get_geoscape_version(date: datetime) -> tuple[str, str]:
+# get latest Geoscape release version as YYYYMM, as of the date provided
+def get_geoscape_version(date: date) -> str:
     month = date.month
     year = date.year
 
     if month == 1:
         gs_version = str(year - 1) + "11"
-        previous_gs_version = str(year - 1) + "08"
     elif 2 <= month < 5:
         gs_version = str(year) + "02"
-        previous_gs_version = str(year - 1) + "11"
     elif 5 <= month < 8:
         gs_version = str(year) + "05"
-        previous_gs_version = str(year) + "02"
     elif 8 <= month < 11:
         gs_version = str(year) + "08"
-        previous_gs_version = str(year) + "05"
     else:
         gs_version = str(year) + "11"
-        previous_gs_version = str(year) + "08"
 
-    return gs_version, previous_gs_version
+    return gs_version
 
 
 # get python, psycopg and OS versions
@@ -71,7 +66,7 @@ parser.add_argument(
             'otherwise \'password\'.')
 
 # schema names for the raw gnaf, flattened reference and admin boundary tables
-geoscape_version = get_geoscape_version(datetime.today().astimezone())
+geoscape_version = get_geoscape_version(date.today()) # noqa: DTZ011
 
 parser.add_argument(
     "--geoscape-version", default=geoscape_version,

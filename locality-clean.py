@@ -78,8 +78,8 @@ def main():
                 logger.info(f"\t- {arg} : ************")
 
     # get SRID of locality boundaries
-    sql = geoscape.prep_sql(f"select Find_SRID('{settings.admin_bdys_schema}', 'locality_bdys', 'geom')")
-    pg_cur.execute(sql) # type: ignore
+    sql_string = geoscape.prep_sql(f"select Find_SRID('{settings.admin_bdys_schema}', 'locality_bdys', 'geom')")
+    pg_cur.execute(sql_string) # type: ignore
     srid = int(pg_cur.fetchone()[0]) # type: ignore
     if srid == 4283:
         logger.info(f"Locality boundary coordinate system is EPSG:{srid} (GDA94)")
