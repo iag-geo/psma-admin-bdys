@@ -7,7 +7,6 @@ import sys
 from datetime import datetime
 
 import psycopg
-from psycopg import sql
 
 
 # get latest Geoscape release version as YYYYMM, as of the date provided, as well as the prev. version 3 months prior
@@ -104,16 +103,16 @@ sa4_boundary_table = args.sa4_boundary_table
 output_path = args.output_path
 log_path = args.log_path
 
-admin_bdys_schema = sql.Identifier(args.admin_schema or f"admin_bdys_{geoscape_version}")
+admin_bdys_schema = args.admin_schema or f"admin_bdys_{geoscape_version}"
 
 # create postgres connect string
 pg_host = args.pghost or os.getenv("PGHOST", "localhost")
 pg_port = int(args.pgport or os.getenv("PGPORT", '5432'))
 pg_db = args.pgdb or os.getenv("PGDATABASE", "geoscape")
-pg_user = sql.Identifier(args.pguser or os.getenv("PGUSER", "postgres"))
+pg_user = args.pguser or os.getenv("PGUSER", "postgres")
 pg_password = args.pgpassword or os.getenv("PGPASSWORD", "password")
 
-pg_connect_string = f"dbname='{pg_db}' host='{pg_host}' port='{pg_port}' user='{pg_user!s}' password='{pg_password}'"
+pg_connect_string = f"dbname='{pg_db}' host='{pg_host}' port='{pg_port}' user='{pg_user}' password='{pg_password}'"
 
 # set postgres script directory
 sql_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "postgres-scripts")
