@@ -94,7 +94,7 @@ args = parser.parse_args()
 
 max_processes = args.max_processes
 geoscape_version = args.geoscape_version
-sa4_boundary_table = args.sa4_boundary_table
+# sa4_boundary_table = args.sa4_boundary_table
 output_path = args.output_path
 log_path = args.log_path
 
