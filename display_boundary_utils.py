@@ -1,17 +1,16 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import math
 
 
-def thin_geom_sql(zoom_level):
+def thin_geom_sql(zoom_level: int) -> str:
     tolerance = get_tolerance(zoom_level, "degrees")
-    return "ST_Multi(ST_Union(ST_MakeValid(ST_SimplifyVW(geom, {0}))))".format(tolerance,)
+    return f"ST_Multi(ST_Union(ST_MakeValid(ST_SimplifyVW(geom, {tolerance}))))"
 
 
 # calculates the area tolerance (in metres or degrees squared)
 # for input into the Visvalingam-Whyatt vector simplification
-def get_tolerance(zoom_level, units="degrees"):
+def get_tolerance(zoom_level: int, units:str="degrees") -> float:
 
     # pixels squared factor
     tolerance_square_pixels = 20
@@ -38,7 +37,7 @@ def get_tolerance(zoom_level, units="degrees"):
 
 
 # maximum number of decimal places for boundary coordinates - improves display performance
-def get_decimal_places(zoom_level):
+def get_decimal_places(zoom_level: int) -> int:
 
     # rough metres to degrees conversation, using spherical WGS84 datum radius for simplicity and speed
     metres2degrees = (2.0 * math.pi * 6378137.0) / 360.0
@@ -49,7 +48,7 @@ def get_decimal_places(zoom_level):
     # the tolerance for thinning data and limiting decimal places in GeoJSON responses
     degrees_per_pixel = metres_per_pixel / metres2degrees
 
-    scale_string = "{:10.9f}".format(degrees_per_pixel).split(".")[1]
+    scale_string = f"{degrees_per_pixel:.9f}".split(".")[1]
     places = 1
 
     trigger = "0"
